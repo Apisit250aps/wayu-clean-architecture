@@ -10,7 +10,7 @@ import {
   ApiResponse,
   AppError,
   ValidationError,
-} from '@shop/applications/lib/error';
+} from '@<project>/applications/lib/error';
 import { ContentfulStatusCode } from 'hono/utils/http-status';
 
 export type RequestSchema = {
@@ -137,7 +137,7 @@ export default Controller;
 // apps/web/src/api/controllers/user.controller.ts
 import Controller from '@/shared/utils/controller';
 import { createUserUseCase } from '@/shared/applications/user.usecase';
-import { createUserSchema } from '@shop/domains/schema/user';
+import { createUserSchema } from '@<project>/domains/schema/user';
 
 class UserController extends Controller {
   public createUser = this.validator({ body: createUserSchema }, async (c) => {

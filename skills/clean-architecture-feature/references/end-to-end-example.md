@@ -137,10 +137,10 @@ import {
   IGetProductUseCase,
   IGetProductsUseCase,
   IGetProductsContext,
-} from '@shop/domains/applications/product';
-import { Product } from '@shop/domains/entities';
-import { IProductRepository } from '@shop/domains/repositories/product';
-import { createProductSchema } from '@shop/domains/schema/product';
+} from '@<project>/domains/applications/product';
+import { Product } from '@<project>/domains/entities';
+import { IProductRepository } from '@<project>/domains/repositories/product';
+import { createProductSchema } from '@<project>/domains/schema/product';
 import { ValidationError, NotFoundError, DuplicateError } from '#lib/error';
 
 export class CreateProductUseCase implements ICreateProductUseCase {
@@ -188,12 +188,12 @@ export class GetProductsUseCase implements IGetProductsUseCase {
 
 ### `packages/infrastructures/src/repositories/product.repo.ts`
 ```typescript
-import type { Database } from '@shop/database/db';
-import { Product } from '@shop/domains/entities';
-import { IProductRepository } from '@shop/domains/repositories/product';
-import { products } from '@shop/database/schema';
-import { Repository } from '@shop/database/repository';
-import { CreateProduct, UpdateProduct } from '@shop/domains/schema/product';
+import type { Database } from '@<project>/database/db';
+import { Product } from '@<project>/domains/entities';
+import { IProductRepository } from '@<project>/domains/repositories/product';
+import { products } from '@<project>/database/schema';
+import { Repository } from '@<project>/database/repository';
+import { CreateProduct, UpdateProduct } from '@<project>/domains/schema/product';
 import { eq } from 'drizzle-orm';
 
 export default class ProductRepository
@@ -220,8 +220,8 @@ export default class ProductRepository
 
 ### `apps/web/src/shared/repositories/index.ts`
 ```typescript
-import db from '@shop/database/db';
-import ProductRepository from '@shop/infrastructures/repositories/product';
+import db from '@<project>/database/db';
+import ProductRepository from '@<project>/infrastructures/repositories/product';
 
 export const productRepository = new ProductRepository(db as never);
 ```
@@ -232,7 +232,7 @@ import {
   CreateProductUseCase,
   GetProductUseCase,
   GetProductsUseCase,
-} from '@shop/applications/use-cases/products/product';
+} from '@<project>/applications/use-cases/products/product';
 import { productRepository } from '@/shared/repositories';
 
 export const createProductUseCase = new CreateProductUseCase(productRepository);
@@ -248,7 +248,7 @@ import {
   getProductUseCase,
   getProductsUseCase,
 } from '@/shared/applications/product.usecase';
-import { createProductSchema } from '@shop/domains/schema/product';
+import { createProductSchema } from '@<project>/domains/schema/product';
 import { z } from 'zod';
 
 class ProductController extends Controller {

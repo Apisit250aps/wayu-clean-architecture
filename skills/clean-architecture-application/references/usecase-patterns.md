@@ -93,10 +93,10 @@ import {
   IUpdateUserUseCase,
   IDeleteUserContext,
   IDeleteUserUseCase,
-} from '@shop/domains/applications/users';
-import { User } from '@shop/domains/entities';
-import { IUserRepository } from '@shop/domains/repositories/user';
-import { createUserSchema, updateUserSchema } from '@shop/domains/schema/user';
+} from '@<project>/domains/applications/users';
+import { User } from '@<project>/domains/entities';
+import { IUserRepository } from '@<project>/domains/repositories/user';
+import { createUserSchema, updateUserSchema } from '@<project>/domains/schema/user';
 import { ValidationError, NotFoundError, DuplicateError } from '../lib/error';
 
 export class CreateUserUseCase implements ICreateUserUseCase {
@@ -134,6 +134,18 @@ export class UpdateUserUseCase implements IUpdateUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(context: IUpdateUserContext): Promise<User> {
+    // Check existence first
+    const existingUser = await this.userRepository.findById(context.id);
+    if (!existingUser) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Check email uniqueness if email is being updated
+    if (context.data.email && context.data.email !== existingUser.email) {
+      const emailInUse = await this.userRepository.findByEmail(context.data.email);
+      if (emailInUse) throw new DuplicateError('Email is already in use by another user');
+    }
+
     const parsed = await updateUserSchema.safeParseAsync(context.data);
     if (!parsed.success) {
       throw new ValidationError('Invalid update data');
@@ -146,6 +158,8 @@ export class DeleteUserUseCase implements IDeleteUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(context: IDeleteUserContext): Promise<void> {
+    const existingUser = await this.userRepository.findById(context.id);
+    if (!existingUser) throw new NotFoundError('User not found');
     await this.userRepository.delete(context.id);
   }
 }

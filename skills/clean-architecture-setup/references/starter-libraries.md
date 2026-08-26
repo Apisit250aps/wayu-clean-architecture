@@ -12,7 +12,8 @@ This reference provides the battle-tested custom libraries and utilities extract
 5. [Database: Schema Helpers & UUIDv7 (`lib/utils.ts` & `lib/uuid.ts`)](#5-database-schema-helpers--uuidv7-libutilsts--libuuidts)
 6. [Infrastructure: Argon2 Password Hasher (`lib/password.ts`)](#6-infrastructure-argon2-password-hasher-libpasswordts)
 7. [Tools: Prettier Formatting Setup (`.prettierrc` & `.prettierignore`)](#7-tools-prettier-formatting-setup-prettierrc--prettierignore)
-8. [Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)](#8-tools-typespec-generator-with-ts-morph-scriptsgeneratets)
+8. [Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)](#8-tools-typespec-generator-packagesdomainsscriptsgeneratets)
+9. [Client: TypeSpec & Hey-API SDK Setup (`packages/client`)](#9-client-typespec--hey-api-sdk-setup-packagesclient)
 
 ---
 
@@ -313,7 +314,7 @@ Provides automated CRUD implementations for all repositories using Drizzle ORM.
 ```typescript
 // packages/database/src/repository.ts or src/infrastructure/database/repository.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseRepository } from '@shop/domains';
+import { BaseRepository } from '@<project>/domains';
 import type { Database } from './db';
 import { PgTable } from 'drizzle-orm/pg-core';
 import { eq } from 'drizzle-orm';
@@ -464,38 +465,65 @@ bun.lockb
 
 ---
 
-## 8. Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)
+## 8. Tools: TypeSpec Generator (`packages/domains/scripts/generate.ts`)
 
-Automatically generates TypeSpec (`.tsp`) models from TypeScript Domain Entities for OpenAPI/Client generation.
+Automatically converts TypeScript Domain Entity classes → TypeSpec (`.tsp`) models for OpenAPI/Client SDK generation. Place this file in `packages/domains/scripts/generate.ts`.
 
+**Install dependency in `packages/domains`:**
+```bash
+npm install ts-morph --save-dev
+```
+
+**Add script to `packages/domains/package.json`:**
+```json
+{
+  "scripts": {
+    "generate": "npx tsx scripts/generate.ts"
+  }
+}
+```
+
+**Full source (`packages/domains/scripts/generate.ts`):**
 ```typescript
-// packages/domains/scripts/generate.ts
 import { Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
 import { log } from 'console';
 
+// Script is always run from the package root (packages/domains)
 const root = process.cwd();
 
+// Map TypeScript primitive types -> TypeSpec types
 function tsTypeToTsp(typeName: string): string {
   const t = typeName.trim();
+
+  // Handle union types: Date | null -> utcDateTime | null
   if (t.includes('|')) {
     return t
       .split('|')
       .map((subType) => tsTypeToTsp(subType.trim()))
       .join(' | ');
   }
+
+  // Handle array types: T[] -> T[]
   if (t.endsWith('[]')) {
     const inner = t.slice(0, -2);
     return `${tsTypeToTsp(inner)}[]`;
   }
+
   switch (t) {
-    case 'string': return 'string';
-    case 'number': return 'int32';
-    case 'boolean': return 'boolean';
-    case 'Date': return 'utcDateTime';
-    case 'null': return 'null';
-    default: return t;
+    case 'string':
+      return 'string';
+    case 'number':
+      return 'int32';
+    case 'boolean':
+      return 'boolean';
+    case 'Date':
+      return 'utcDateTime';
+    case 'null':
+      return 'null';
+    default:
+      return t;
   }
 }
 
@@ -506,7 +534,9 @@ function buildModelBlock(
   const lines: string[] = [];
   lines.push(`  model ${name} {`);
 
+  // Base fields that are replaced by ...BaseEntity; spread
   const BASE_FIELDS = ['id', 'createdAt', 'updatedAt', 'deletedAt'];
+
   const hasBaseFields = props.some((p) => BASE_FIELDS.includes(p.name));
   const domainProps = props.filter((p) => !BASE_FIELDS.includes(p.name));
 
@@ -525,8 +555,12 @@ function buildModelBlock(
 }
 
 const SKIP_PROPS = new Set(['schema']);
+
 const entitiesGlob = path.join(root, 'src/entities/**/*.ts');
-const outPath = path.join(root, '../../packages/client/spec/models/entities.tsp');
+const outPath = path.join(
+  root,
+  '../../packages/client/spec/models/entities.tsp',
+);
 
 const project = new Project({
   tsConfigFilePath: path.join(root, 'tsconfig.json'),
@@ -534,32 +568,89 @@ const project = new Project({
 });
 
 project.addSourceFilesAtPaths(entitiesGlob);
+
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
 const blocks: string[] = [];
 
 for (const sourceFile of project.getSourceFiles()) {
+  // Generate TypeSpec enums from TypeScript enums
   for (const en of sourceFile.getEnums()) {
     const enumName = en.getName();
     if (!enumName) continue;
+
     const lines: string[] = [];
     lines.push(`  enum ${enumName} {`);
+
     for (const member of en.getMembers()) {
       const memberName = member.getName();
       const value = member.getValue();
-      lines.push(
-        typeof value === 'string'
-          ? `    ${memberName}: "${value}",`
-          : `    ${memberName}: ${value},`
-      );
+      if (typeof value === 'string') {
+        lines.push(`    ${memberName}: "${value}",`);
+      } else if (typeof value === 'number') {
+        lines.push(`    ${memberName}: ${value},`);
+      } else {
+        lines.push(`    ${memberName},`);
+      }
     }
+
     lines.push('  }');
     blocks.push(lines.join('\n'));
   }
 
+  // Generate TypeSpec models from TypeScript interfaces
+  for (const iface of sourceFile.getInterfaces()) {
+    const name = iface.getName();
+    if (!name) continue;
+
+    const props = iface.getProperties().map((p) => ({
+      name: p.getName(),
+      optional: p.hasQuestionToken(),
+      typeText: p.getTypeNode()?.getText() ?? p.getType().getText(p),
+    }));
+
+    blocks.push(buildModelBlock(`${name}`, props));
+  }
+
+  // Generate TypeSpec models from TypeScript type aliases
+  for (const typeAlias of sourceFile.getTypeAliases()) {
+    const name = typeAlias.getName();
+    if (!name) continue;
+
+    const typeNode = typeAlias.getTypeNode();
+    if (!typeNode) continue;
+
+    const typeObj = typeAlias.getType();
+    if (!typeObj.isObject()) continue;
+
+    const props = typeObj.getProperties().map((sym) => {
+      const decl = sym.getDeclarations()[0];
+      const optional = sym.isOptional();
+      let typeText: string;
+      if (decl !== undefined && 'getTypeNode' in decl) {
+        const node = (
+          decl as { getTypeNode?: () => { getText(): string } | undefined }
+        ).getTypeNode;
+        typeText = node
+          ? (node.call(decl)?.getText() ??
+            sym.getTypeAtLocation(decl).getText())
+          : sym.getTypeAtLocation(decl).getText();
+      } else if (decl !== undefined) {
+        typeText = sym.getTypeAtLocation(decl).getText();
+      } else {
+        typeText = sym.getDeclaredType().getText();
+      }
+      return { name: sym.getName(), optional, typeText };
+    });
+
+    blocks.push(buildModelBlock(`${name}`, props));
+  }
+
+  // Generate TypeSpec models from TypeScript classes
   for (const cls of sourceFile.getClasses()) {
     const className = cls.getName();
     if (!className) continue;
+
     const props = cls
       .getProperties()
       .filter((p) => !SKIP_PROPS.has(p.getName()))
@@ -568,13 +659,117 @@ for (const sourceFile of project.getSourceFiles()) {
         optional: p.hasQuestionToken(),
         typeText: p.getTypeNode()?.getText() ?? p.getType().getText(p),
       }));
+
     blocks.push(buildModelBlock(`${className}`, props));
   }
 }
 
-const baseEntityTemplate = `  model BaseEntity {\n    id: string;\n    createdAt: utcDateTime;\n    updatedAt: utcDateTime;\n  }`;
+// Build BaseEntity template and write final output
+const baseEntityTemplate = `  model BaseEntity {
+    id: string;
+    createdAt: utcDateTime;
+    updatedAt: utcDateTime;
+  }`;
+
 const finalTspContent = `namespace Domain.Entity;\n\n${baseEntityTemplate}\n\n${blocks.join('\n\n')}\n`;
 
 fs.writeFileSync(outPath, finalTspContent, 'utf-8');
-log(`Generated TypeSpec: ${outPath}`);
+log(`Generated: ${outPath}`);
+```
+
+**Output location:** `packages/client/spec/models/entities.tsp`
+
+**When to run:** After adding or modifying any entity class in `packages/domains/src/entities/`. The script is idempotent — safe to re-run anytime.
+
+---
+
+## 9. Client: TypeSpec & Hey-API SDK Setup (`packages/client`)
+
+### `packages/client/tspconfig.yaml`
+```yaml
+emit:
+  - '@typespec/openapi3'
+options:
+  '@typespec/openapi3':
+    emitter-output-dir: '{cwd}/schema'
+    openapi-versions:
+      - 3.1.0
+```
+
+### `packages/client/openapi-ts.config.ts`
+```typescript
+import { defineConfig } from '@hey-api/openapi-ts';
+
+export default defineConfig({
+  input: './schema/openapi.yaml',
+  output: './src/api',
+  plugins: [
+    '@hey-api/client-axios',
+    '@hey-api/typescript',
+    '@hey-api/sdk',
+    '@tanstack/react-query',
+    {
+      dates: true,
+      name: '@hey-api/transformers',
+    },
+  ],
+});
+```
+
+### Common Responses (`packages/client/spec/models/common.tsp`)
+```typespec
+using TypeSpec.Http;
+using TypeSpec.Rest;
+
+namespace <ProjectName>;
+
+@doc("Successful response wrapping data payload")
+model ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+@doc("Error response returned on failures")
+model ApiErrorResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+@doc("Successful response without data payload")
+model BasicResponse {
+  success: boolean;
+  message: string;
+}
+
+@doc("200 OK with data")
+model ApiOkResponse<T> {
+  @statusCode _: 200;
+  @body body: ApiResponse<T>;
+}
+
+@doc("200 OK without data")
+model ApiOkBasicResponse {
+  @statusCode _: 200;
+  @body body: BasicResponse;
+}
+
+@doc("201 Created with data")
+model ApiCreatedResponse<T> {
+  @statusCode _: 201;
+  @body body: ApiResponse<T>;
+}
+
+@doc("400 Bad Request")
+model ApiBadRequestResponse {
+  @statusCode _: 400;
+  @body body: ApiErrorResponse;
+}
+
+@doc("404 Not Found")
+model ApiNotFoundResponse {
+  @statusCode _: 404;
+  @body body: ApiErrorResponse;
+}
 ```

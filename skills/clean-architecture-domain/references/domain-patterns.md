@@ -1,5 +1,28 @@
 # Domain Layer Patterns & Code Templates
 
+## 0. Core Abstractions (`src/index.ts`)
+
+The root entry point exports the two base abstract classes that all other packages depend on:
+
+```typescript
+// packages/domains/src/index.ts
+export abstract class BaseUseCase<Context, TOutput> {
+  abstract execute(context: Context): Promise<TOutput>;
+}
+
+export abstract class BaseRepository<T, Create, Update> {
+  abstract findAll(): Promise<T[]>;
+  abstract findById(id: string): Promise<T | null>;
+  abstract create(entity: Create): Promise<T>;
+  abstract update(id: string, entity: Update): Promise<T>;
+  abstract delete(id: string): Promise<void>;
+}
+
+export * from './applications';
+```
+
+---
+
 ## 1. Zod Entity Builder (`lib/entity.ts`)
 
 ```typescript

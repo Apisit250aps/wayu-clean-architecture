@@ -12,7 +12,7 @@
 
 3. **Subpath Imports**:
    - Use `#lib/*`, `#schema/*`, `#entities/*` internally within the layer package.
-   - Use `@shop/domains/...` when importing from outside packages.
+   - Use `@<project>/domains/...` when importing from outside packages.
 
 4. **Zero Tolerance Quality Check**:
    - Do not stop until `npm run check-types` and `npm run lint` pass with 0 errors and 0 warnings.

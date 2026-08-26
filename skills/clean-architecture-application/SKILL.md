@@ -1,55 +1,191 @@
 ---
 name: clean-architecture-application
-description: Implement Application Layer business use cases, interactors, CQRS commands/queries, DTOs, ports, and mappers.
+description: Implement Application Layer use cases in packages/applications — use case classes that implement contracts from packages/domains, with safeParseAsync validation and typed error handling.
 tags:
   - backend
 ---
 
 # Clean Architecture Application Layer Skill
 
-Use this skill when building features, workflows, and business use cases in the **Application Layer** (`src/application`).
+Use this skill when implementing use cases in **`packages/applications`**.
 
 ---
 
 ## 🎯 Primary Responsibilities
 
-1. **Single Responsibility Use Cases / Interactors**: Each use case executes exactly one business action (e.g., `RegisterUserUseCase`, `ChangePasswordUseCase`, `CreateOrderUseCase`).
-2. **Define Input & Output DTOs**: Never expose internal domain entities directly across boundary layers; map through explicit DTOs.
-3. **Declare Application Ports (Interfaces)**: Define contracts for cross-cutting external services (e.g., `ITokenService`, `IEmailService`, `IPaymentGateway`, `IIdGenerator`).
-4. **Data Mappers**: Convert between Domain Entities and Application DTOs cleanly.
+`packages/applications` contains the **concrete implementations** of use case contracts that were defined in `packages/domains/src/applications/*.usecase.ts`:
+
+1. **Implement use case classes** — `class CreateXxxUseCase implements ICreateXxxUseCase`
+2. **Validate input** — always `safeParseAsync` (never `parse`)
+3. **Throw typed errors** — from `src/lib/error.ts`
+4. **Inject repository via constructor** — no DI container, just constructor injection
+
+> ❌ DTOs, mappers, and port interfaces (IEmailService, ITokenService) are avoided in favor of Schema-First Zod.
+> ✅ Types come directly from Zod-inferred schema types in `@<project>/domains`.
 
 ---
 
-## 🏗️ Use Case Anatomy & Workflow
+## 🔗 Import Paths
 
-Every Use Case should follow a standard orchestration flow:
+Use case implementations import from:
 
-```text
-[Input DTO] ──▶ [Validate & Parse VOs] ──▶ [Fetch Domain Entities via Repo Interface]
-                                                         │
-                                                         ▼
-[Output DTO] ◀── [Map Result] ◀── [Persist / Dispatch] ◀── [Execute Domain Logic]
+```typescript
+import { ICreateXxxUseCase, ICreateXxxContext } from '@<project>/domains/applications/<module>';
+import { Xxx } from '@<project>/domains/entities';
+import { IXxxRepository } from '@<project>/domains/repositories/<module>';
+import { createXxxSchema, updateXxxSchema } from '@<project>/domains/schema/<module>';
+import { ValidationError, NotFoundError, DuplicateError } from '../../lib/error';
 ```
 
-### Standard Execution Steps
-1. Receive input DTO from Presentation layer.
-2. Construct Domain Value Objects (which enforces invariant validation).
-3. Query domain repository or external ports for needed aggregates.
-4. Call business methods on the Domain Entity.
-5. Save updated state through the repository interface.
-6. Dispatch domain events or external notifications via ports.
-7. Return a response DTO (or void / Result object) back to the caller.
+---
+
+## 🏗️ Use Case Implementation Pattern
+
+### File: `src/use-cases/<module>/<module>.usecase.ts`
+
+```typescript
+import {
+  ICreateProductContext,
+  IUpdateProductContext,
+  IDeleteProductContext,
+  IGetProductContext,
+  IGetProductsContext,
+  ICreateProductUseCase,
+  IUpdateProductUseCase,
+  IDeleteProductUseCase,
+  IGetProductUseCase,
+  IGetProductsUseCase,
+} from '@<project>/domains/applications/product';
+import { Product } from '@<project>/domains/entities';
+import { IProductRepository } from '@<project>/domains/repositories/product';
+import { createProductSchema, updateProductSchema } from '@<project>/domains/schema/product';
+import {
+  ValidationError,
+  NotFoundError,
+  DuplicateError,
+} from '../../lib/error';
+
+export class CreateProductUseCase implements ICreateProductUseCase {
+  constructor(private readonly repo: IProductRepository) {}
+
+  async execute(context: ICreateProductContext): Promise<Product> {
+    // 1. Validate with safeParseAsync (never .parse())
+    const parsed = await createProductSchema.safeParseAsync(context.data);
+    if (!parsed.success) throw new ValidationError('Invalid product data');
+
+    // 2. Check business rule (if applicable)
+    const existing = await this.repo.findBySku(parsed.data.sku);
+    if (existing) throw new DuplicateError('Product with this SKU already exists');
+
+    // 3. Persist and return
+    return this.repo.create(parsed.data);
+  }
+}
+
+export class UpdateProductUseCase implements IUpdateProductUseCase {
+  constructor(private readonly repo: IProductRepository) {}
+
+  async execute(context: IUpdateProductContext): Promise<Product> {
+    const existing = await this.repo.findById(context.id);
+    if (!existing) throw new NotFoundError('Product not found');
+
+    const parsed = await updateProductSchema.safeParseAsync(context.data);
+    if (!parsed.success) throw new ValidationError('Invalid update product data');
+
+    return this.repo.update(context.id, parsed.data);
+  }
+}
+
+export class DeleteProductUseCase implements IDeleteProductUseCase {
+  constructor(private readonly repo: IProductRepository) {}
+
+  async execute(context: IDeleteProductContext): Promise<void> {
+    const existing = await this.repo.findById(context.id);
+    if (!existing) throw new NotFoundError('Product not found');
+    await this.repo.delete(context.id);
+  }
+}
+
+export class GetProductUseCase implements IGetProductUseCase {
+  constructor(private readonly repo: IProductRepository) {}
+
+  async execute(context: IGetProductContext): Promise<Product | null> {
+    const product = await this.repo.findById(context.id);
+    if (!product) throw new NotFoundError('Product not found');
+    return product;
+  }
+}
+
+export class GetProductsUseCase implements IGetProductsUseCase {
+  constructor(private readonly repo: IProductRepository) {}
+
+  async execute(_?: IGetProductsContext): Promise<Product[]> {
+    return this.repo.findAll();
+  }
+}
+```
+
+---
+
+## 🚨 Error Classes (`src/lib/error.ts`)
+
+All errors extend `AppError`. Use typed subclasses to communicate intent:
+
+| Class | HTTP status | When to use |
+|---|---|---|
+| `ValidationError` | 422 | Input fails Zod `safeParseAsync` |
+| `NotFoundError` | 404 | Entity doesn't exist by ID/lookup |
+| `DuplicateError` | 409 | Unique constraint violation |
+| `UnauthorizedError` | 401 | Missing or invalid auth |
+| `ForbiddenError` | 403 | Insufficient permissions |
+| `InternalError` | 500 | Unexpected server error |
+
+```typescript
+// Throw pattern
+throw new NotFoundError('Product not found');
+throw new ValidationError('Invalid product data');
+throw new DuplicateError('Product SKU already exists');
+```
+
+Do NOT use:
+```typescript
+throw new Error('something went wrong');   // ❌ — use typed subclass
+res.status(404).json({ ... });             // ❌ — use cases never touch HTTP
+```
+
+---
+
+## 🏗️ Use Case Orchestration Flow
+
+```text
+execute(context)
+    │
+    ├── 1. safeParseAsync(context.data) → throw ValidationError if fail
+    │
+    ├── 2. (Optional) Check existence → throw NotFoundError
+    │
+    ├── 3. (Optional) Check uniqueness → throw DuplicateError
+    │
+    ├── 4. Call repository method (create / update / delete / findById / findAll)
+    │
+    └── 5. Return result (Entity or void)
+```
 
 ---
 
 ## 🚫 Application Layer Guardrails
 
-- ❌ **NO Concrete Infrastructure Dependencies**: Never import `PrismaClient`, `TypeORM`, `axios`, `nodemailer`, or `ioredis`. Only import interface ports.
-- ❌ **NO HTTP/Web Specifics**: Never accept `express.Request`, `res: Response`, `next`, or HTTP headers into a Use Case.
-- ❌ **NO Business Logic Duplication**: Core business validation belongs in Domain Entities/Value Objects, not scattered across use cases.
+| Rule | Detail |
+|---|---|
+| ❌ No infrastructure imports | Never import from `@<project>/database` or `@<project>/infrastructures` |
+| ❌ No HTTP/web specifics | No `Request`, `Response`, status codes, headers |
+| ❌ No `parse()` | Always use `safeParseAsync` for validation |
+| ❌ No direct `new Repository()` | Use constructor injection with interface type |
+| ✅ Only import from `@<project>/domains` | Interfaces, schemas, and entity types |
+| ✅ Constructor injection only | No DI container — wire in composition root (`apps/web`) |
 
 ---
 
 ## 📚 Further Reference
 
-See [usecase-patterns.md](references/usecase-patterns.md) for code patterns, DTOs, and Port definitions.
+See [usecase-patterns.md](references/usecase-patterns.md) for the full `error.ts` source and additional use case examples.

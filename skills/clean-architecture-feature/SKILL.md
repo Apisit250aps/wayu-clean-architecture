@@ -82,25 +82,98 @@ Whenever generating a new feature, you **MUST** execute these 7 steps in sequent
 
 ---
 
-### 5️⃣ Step 5: Presentation Layer (`apps/web` or `src/presentation`)
+### 5️⃣ Step 5: Presentation Layer (`apps/web`)
+
+> 📖 **See [`clean-architecture-frontend`](../clean-architecture-frontend/SKILL.md) for the complete presentation layer guide.**
+
+In summary:
 1. **Wire DI Singletons (`apps/web/src/shared/`)**:
-   - Instantiate repository in `shared/repositories/index.ts`.
-   - Instantiate use cases in `shared/applications/<module>.usecase.ts`.
+   - Instantiate repository (from `@<project>/infrastructures`) in `shared/repositories/index.ts`.
+   - Instantiate use cases (from `@<project>/applications`) in `shared/applications/<module>.usecase.ts`.
 2. **Hono Controller (`apps/web/src/api/controllers/<module>.controller.ts`)**:
    - Extend base `Controller`.
-   - Group module endpoints following the **Ponytail Principle**.
-   - Use `this.validator({ body, query, params })` and `this.success(c, message, data)`.
-3. **Hono Route (`apps/web/src/api/routes/<module>.route.ts`)**:
-   - Define routes (`.get`, `.post`, `.put`, `.delete`).
-4. **Register in Main Router (`apps/web/src/api/index.ts`)**:
-   - Mount router under `/api/<module>`.
+   - Group related endpoints by domain (**Ponytail Principle** — no over-fragmentation).
+   - Use `this.validator({ body, query, params })` for input parsing.
+   - Use `this.success(c, message, data)` for responses.
+3. **Mount router** in `apps/web/src/api/index.ts` under `/api/<module>`.
 
 ---
 
-### 6️⃣ Step 6: (Optional) TypeSpec / Client SDK Generation
-1. Update TypeSpec models in `packages/client/spec/models/<module>.tsp`.
-2. Update TypeSpec services in `packages/client/spec/services/<module>.tsp`.
-3. Run `npm run generate` to sync TypeScript client types.
+### 6️⃣ Step 6: (Optional) TypeSpec API Specification & Client SDK Generation
+
+> 📖 **See [`clean-architecture-typespec`](../clean-architecture-typespec/SKILL.md) for full TypeSpec syntax and SDK generation guidelines.**
+
+When adding or updating API contracts:
+
+1. **Auto-Generate Entities to TypeSpec**:
+   Run the `generate.ts` script in `packages/domains` to sync entity classes into `packages/client/spec/models/entities.tsp`:
+   ```bash
+   cd packages/domains && npm run generate
+   ```
+
+2. **Define Module TypeSpec Model (`packages/client/spec/models/<module>.tsp`)**:
+   - **Model Aliasing**: Alias the generated entity (never use `Domain.Entity.<Model>` directly).
+   - **Request DTOs**: Use `OmitProperties` for Create and `OptionalProperties<OmitProperties<...>>` for Update requests:
+   ```typespec
+   model Product is Domain.Entity.Product;
+
+   model CreateProduct
+     is OmitProperties<Product, "id" | "createdAt" | "updatedAt">;
+
+   model UpdateProduct
+     is OptionalProperties<OmitProperties<Product, "id" | "createdAt" | "updatedAt">>;
+   ```
+
+3. **Define Module HTTP Service (`packages/client/spec/services/<module>.tsp`)**:
+   ```typespec
+   import "@typespec/http";
+   import "@typespec/rest";
+   import "@typespec/openapi3";
+
+   using TypeSpec.Http;
+   using TypeSpec.Rest;
+
+   namespace <ProjectName>;
+
+   @route("/products")
+   @tag("Product")
+   interface ProductServices {
+     @get
+     @route("/")
+     getProducts(): ApiOkResponse<Product[]>;
+
+     @get
+     @route("/{id}")
+     getProduct(@path id: string): ApiOkResponse<Product> | ApiNotFoundResponse;
+
+     @post
+     @route("/")
+     createProduct(@body body: CreateProduct):
+       | ApiCreatedResponse<Product>
+       | ApiBadRequestResponse;
+
+     @put
+     @route("/{id}")
+     updateProduct(@path id: string, @body body: UpdateProduct):
+       | ApiOkResponse<Product>
+       | ApiNotFoundResponse
+       | ApiBadRequestResponse;
+
+     @delete
+     @route("/{id}")
+     deleteProduct(@path id: string): ApiOkBasicResponse | ApiNotFoundResponse;
+   }
+   ```
+
+4. **Register in `packages/client/spec/main.tsp`**:
+   Add `import "./models/<module>.tsp";` and `import "./services/<module>.tsp";`.
+
+5. **Compile Spec & Generate Client SDK**:
+   ```bash
+   cd packages/client && npm run generate
+   # 1. tsp compile ./spec/main.tsp -> emits schema/openapi.yaml
+   # 2. openapi-ts -> compiles schema/openapi.yaml into TypeScript SDK & TanStack Query hooks in src/api/
+   ```
 
 ---
 
@@ -116,5 +189,7 @@ npm run format        # 3. Prettier code formatting
 
 ## 📚 Further Reference
 
+- [clean-architecture-typespec](../clean-architecture-typespec/SKILL.md): Comprehensive TypeSpec patterns, DTO transforms, and Client SDK generation guide.
 - [feature-generation-guide.md](references/feature-generation-guide.md): Deep-dive rules and best practices for module generation.
 - [end-to-end-example.md](references/end-to-end-example.md): Complete real-world code example for a `Product` module.
+

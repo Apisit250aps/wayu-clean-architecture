@@ -25,7 +25,7 @@ Use this skill when building, composing, or refactoring Frontend UI components i
 │  - Feature Screens & Pages                             │
 │  - Consumes SDK / TypeSpec Client                      │
 └──────────────────────────┬─────────────────────────────┘
-                           │ Imports primitives via `@shop/ui`
+                           │ Imports primitives via `@<project>/ui`
                            ▼
 ┌────────────────────────────────────────────────────────┐
 │  packages/ui (Design System / Primitive UI)            │
@@ -52,7 +52,7 @@ Use this skill when building, composing, or refactoring Frontend UI components i
 - **Rules**:
   - **Combined Components**: Place in `apps/web/src/shared/components/...` (e.g. `shared/components/form/input-field.tsx`).
   - **External UI Libraries**: Install `react-hook-form`, `@tanstack/react-table`, etc., in `apps/web`.
-  - **Importing Primitives**: Import primitive components from `@shop/ui/components/...`.
+  - **Importing Primitives**: Import primitive components from `@<project>/ui/components/...`.
 
 ---
 
@@ -60,7 +60,7 @@ Use this skill when building, composing, or refactoring Frontend UI components i
 
 ```tsx
 // apps/web/src/shared/components/form/input-field.tsx
-import { Input } from '@shop/ui/components/input';
+import { Input } from '@<project>/ui/components/input';
 import { Controller, useFormContext } from 'react-hook-form';
 
 export function InputField({ name, label }: { name: string; label: string }) {
