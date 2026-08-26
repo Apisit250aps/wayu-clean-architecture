@@ -76,6 +76,111 @@ The workspace is organized into discrete packages where dependencies strictly po
 
 ---
 
+## 🔗 Subpath Imports (`imports` & `exports` Mapping)
+
+In modern Turborepo setups, each package defines **Subpath Imports (`#...`)** for internal imports and **Subpath Exports** for cross-package imports, avoiding messy relative paths (`../../`):
+
+### 1. `packages/domains/package.json`
+```json
+{
+  "name": "@shop/domains",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/*": "./src/schema/*.ts",
+    "./entities": "./src/entities/index.ts",
+    "./repositories/*": "./src/repositories/*.repo.ts",
+    "./applications/*": "./src/applications/*.usecase.ts"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*.ts",
+    "#schema/*": "./src/schema/*.ts",
+    "#entities/*": "./src/entities/*.ts",
+    "#repositories/*": "./src/repositories/*.repo.ts",
+    "#applications/*": "./src/applications/*.usecase.ts"
+  }
+}
+```
+
+### 2. `packages/applications/package.json`
+```json
+{
+  "name": "@shop/applications",
+  "exports": {
+    ".": "./src/index.ts",
+    "./use-cases/*": "./src/use-cases/*.usecase.ts",
+    "./lib/*": "./src/lib/*.ts"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*.ts",
+    "#use-cases/*": "./src/use-cases/*.usecase.ts"
+  }
+}
+```
+
+### 3. `packages/database/package.json`
+```json
+{
+  "name": "@shop/database",
+  "exports": {
+    "./db": "./src/db.ts",
+    "./schema": "./src/schema/index.ts",
+    "./repository": "./src/repository.ts"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*.ts",
+    "#schema/*": "./src/schema/*.ts"
+  }
+}
+```
+
+### 4. `packages/infrastructures/package.json`
+```json
+{
+  "name": "@shop/infrastructures",
+  "exports": {
+    ".": "./src/index.ts",
+    "./repositories/*": "./src/repositories/*.repo.ts",
+    "./lib/*": "./src/lib/*.ts"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*.ts",
+    "#repositories/*": "./src/repositories/*.repo.ts"
+  }
+}
+```
+
+### 5. `packages/ui/package.json`
+```json
+{
+  "name": "@shop/ui",
+  "exports": {
+    "./globals.css": "./src/styles/globals.css",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts"
+  },
+  "imports": {
+    "#components/*": "./src/components/*.tsx",
+    "#lib/*": "./src/lib/*.ts",
+    "#hooks/*": "./src/hooks/*.ts"
+  }
+}
+```
+
+### 6. `apps/web/package.json`
+```json
+{
+  "name": "web",
+  "imports": {
+    "#api/*": "./src/api/*.ts",
+    "#shared/*": "./src/shared/*.ts",
+    "#components/*": "./src/components/*.tsx"
+  }
+}
+```
+
+---
+
 ## 🛡️ Strict Zero-Tolerance Rules
 
 1. ❌ **No Type-Checking Bypasses**: Never use `// @ts-ignore`, `// @ts-expect-error`, or `// @ts-nocheck`.
