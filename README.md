@@ -42,17 +42,18 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 
 ## 🛠️ Available Skills
 
-| Skill Name | Description | Key Focus |
-| :--- | :--- | :--- |
-| **`clean-architecture-feature`** | 🚀 **Master Orchestrator**: End-to-end generator creating complete features/modules across ALL Clean Architecture layers. | 7-step pipeline (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verify). |
-| **`clean-architecture-monorepo`** | Specialized blueprints for Turborepo Monorepo (domains -> database -> applications -> infrastructures -> web). | Monorepo package boundaries, Hono Controller, Ponytail principle, Drizzle ORM. |
-| **`clean-architecture-setup`** | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
-| **`clean-architecture-domain`** | Design and implement pure Domain Layer components. | Entities, Value Objects, Domain Events, Repository Interfaces, Business Invariants. |
-| **`clean-architecture-application`** | Implement Application Layer Use Cases and Business Workflows. | Use Cases, Interactors, CQRS Commands/Queries, DTOs, Service Ports, Mappers. |
-| **`clean-architecture-infrastructure`** | Implement Infrastructure Layer adapters and external integrations. | Database Repositories (Prisma, TypeORM, GORM, EF Core, etc.), External APIs, Message Brokers. |
-| **`clean-architecture-presentation`** | Implement Presentation Layer handlers, controllers, and APIs. | REST Controllers, GraphQL Resolvers, gRPC Services, Request Validation, ViewModels. |
-| **`clean-architecture-format`** | Enforce naming conventions, file organization, and architectural linting rules. | File suffixes (`.entity`, `.usecase`, etc.), dependency boundary rules, ESLint / Depcruise configs. |
-| **`clean-architecture-validator`** | Audit and validate codebase against Clean Architecture rules. | Detect layer leaks, illegal inward-to-outward imports, bypassed use cases. |
+| Skill Name | Scope / Tag | Description | Key Focus |
+| :--- | :--- | :--- | :--- |
+| **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Master Orchestrator**: End-to-end generator creating complete features/modules across ALL layers. | 7-step pipeline (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verify). |
+| **`clean-architecture-monorepo`** | `🏷️ Both (Fullstack)` | Specialized blueprints for Turborepo Monorepo (`domains` -> `database` -> `applications` -> `infrastructures` -> `web`). | Monorepo package boundaries, Hono Controller, Ponytail principle, Drizzle ORM. |
+| **`clean-architecture-setup`** | `🏷️ Both (Fullstack)` | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
+| **`clean-architecture-domain`** | `🏷️ Both (Shared)` | Design and implement pure Domain Layer components. | Entities, Value Objects, Domain Events, Repository Interfaces, Business Invariants. |
+| **`clean-architecture-application`**| `🏷️ Backend` | Implement Application Layer Use Cases and Business Workflows. | Use Cases, Interactors, CQRS Commands/Queries, DTOs, Service Ports, Mappers. |
+| **`clean-architecture-infrastructure`** | `🏷️ Backend` | Implement Infrastructure Layer adapters and external integrations. | Database Repositories (Prisma, TypeORM, GORM, EF Core, etc.), External APIs, Message Brokers. |
+| **`clean-architecture-presentation`**| `🏷️ Both (Shared)` | Implement Presentation Layer handlers, controllers, and APIs. | REST Controllers, GraphQL Resolvers, gRPC Services, Request Validation, ViewModels. |
+| **`clean-architecture-frontend`** | `🏷️ Frontend` | Frontend architecture: Separation of Design System (`packages/ui`) vs Combined Components (`apps/web`). | Primitives vs Compound UI, react-hook-form, TanStack Table, Client SDK. |
+| **`clean-architecture-format`** | `🏷️ Both (Fullstack)` | Enforce naming conventions, file organization, and architectural linting rules. | File suffixes (`.entity`, `.usecase`, etc.), dependency boundary rules, ESLint / Depcruise configs. |
+| **`clean-architecture-validator`** | `🏷️ Both (Fullstack)` | Audit and validate codebase against Clean Architecture rules. | Detect layer leaks, illegal inward-to-outward imports, bypassed use cases. |
 
 ---
 
@@ -118,6 +119,8 @@ wayu-clean-architecture/
     │   ├── SKILL.md
     │   └── references/
     │       └── presentation-patterns.md
+    ├── clean-architecture-frontend/
+    │   └── SKILL.md
     ├── clean-architecture-format/
     │   ├── SKILL.md
     │   └── references/

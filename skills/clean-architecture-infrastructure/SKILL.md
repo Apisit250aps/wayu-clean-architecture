@@ -1,6 +1,8 @@
 ---
 name: clean-architecture-infrastructure
 description: Implement Infrastructure Layer components (database repositories, ORM adapters, external API clients, message brokers, caching) fulfilling domain and application contracts.
+tags:
+  - backend
 ---
 
 # Clean Architecture Infrastructure Layer Skill

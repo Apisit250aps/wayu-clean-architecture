@@ -1,6 +1,11 @@
 ---
 name: clean-architecture-feature
 description: End-to-end orchestrator skill that creates complete features/modules across ALL Clean Architecture layers (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verification).
+tags:
+  - both
+  - fullstack
+  - backend
+  - frontend
 ---
 
 # Clean Architecture End-to-End Feature Orchestrator Skill 🚀

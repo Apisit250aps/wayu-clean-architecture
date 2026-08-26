@@ -1,6 +1,8 @@
 ---
 name: clean-architecture-application
 description: Implement Application Layer business use cases, interactors, CQRS commands/queries, DTOs, ports, and mappers.
+tags:
+  - backend
 ---
 
 # Clean Architecture Application Layer Skill

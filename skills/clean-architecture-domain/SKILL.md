@@ -1,6 +1,10 @@
 ---
 name: clean-architecture-domain
 description: Design and implement pure Domain Layer components (Entities, Value Objects, Domain Events, Aggregate Roots, Repository Interfaces) free from framework dependencies.
+tags:
+  - both
+  - backend
+  - frontend
 ---
 
 # Clean Architecture Domain Layer Skill

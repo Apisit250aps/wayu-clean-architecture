@@ -1,6 +1,9 @@
 ---
 name: clean-architecture-validator
 description: Audit and validate existing codebases to detect Clean Architecture violations, layer leaks, improper imports, and bypassed use cases.
+tags:
+  - both
+  - fullstack
 ---
 
 # Clean Architecture Validator & Auditor Skill

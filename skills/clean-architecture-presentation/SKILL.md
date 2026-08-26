@@ -1,6 +1,10 @@
 ---
 name: clean-architecture-presentation
 description: Implement Presentation Layer components (HTTP Controllers, REST routes, GraphQL resolvers, gRPC handlers, input validation schemas, ViewModels).
+tags:
+  - both
+  - backend
+  - frontend
 ---
 
 # Clean Architecture Presentation Layer Skill

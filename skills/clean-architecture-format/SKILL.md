@@ -1,6 +1,9 @@
 ---
 name: clean-architecture-format
-description: Enforce consistent file naming conventions, folder structures, and architectural linting rules for Clean Architecture projects.
+description: Enforce consistent file naming conventions, folder structures, Prettier styling, and architectural boundary linting rules.
+tags:
+  - both
+  - fullstack
 ---
 
 # Clean Architecture Format & Style Skill

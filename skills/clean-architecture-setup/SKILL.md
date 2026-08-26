@@ -1,6 +1,11 @@
 ---
 name: clean-architecture-setup
 description: Initialize or scaffold a project with Clean Architecture layers (Domain, Application, Infrastructure, Presentation) and configure dependency inversion rules.
+tags:
+  - both
+  - fullstack
+  - backend
+  - frontend
 ---
 
 # Clean Architecture Setup Skill

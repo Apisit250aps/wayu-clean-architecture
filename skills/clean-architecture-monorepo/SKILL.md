@@ -1,6 +1,11 @@
 ---
 name: clean-architecture-monorepo
 description: Guidelines and blueprints for Turborepo Monorepo Clean Architecture (packages/domains -> packages/database -> packages/applications -> packages/infrastructures -> apps/web with Hono and Drizzle ORM).
+tags:
+  - both
+  - fullstack
+  - backend
+  - frontend
 ---
 
 # Turborepo Monorepo Clean Architecture Skill 🏛️
