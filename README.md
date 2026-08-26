@@ -47,14 +47,14 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 | **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Master Orchestrator**: End-to-end generator creating complete features/modules across ALL layers. | 7-step pipeline (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verify). |
 | **`clean-architecture-monorepo`** | `🏷️ Both (Fullstack)` | 📦 **Package Initializer**: Scaffold new packages (`domains`, `database`, `applications`, `infrastructures`, etc.). | Generates `package.json` with `#imports`, `tsconfig.json`, `eslint.config.mjs` layer boundaries. |
 | **`clean-architecture-setup`** | `🏷️ Both (Fullstack)` | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
-| **`clean-architecture-domain`** | `🏷️ Both (Shared)` | Design and implement pure Domain Layer components. | Entities, Value Objects, Domain Events, Repository Interfaces, Business Invariants. |
-| **`clean-architecture-application`**| `🏷️ Backend` | Implement Application Layer Use Cases and Business Workflows. | Use Cases, Interactors, CQRS Commands/Queries, DTOs, Service Ports, Mappers. |
-| **`clean-architecture-infrastructure`** | `🏷️ Backend` | Implement Infrastructure Layer adapters and external integrations. | Database Repositories (Prisma, TypeORM, GORM, EF Core, etc.), External APIs, Message Brokers. |
-| **`clean-architecture-presentation`**| `🏷️ Both (Shared)` | Implement Presentation Layer handlers, controllers, and APIs. | REST Controllers, GraphQL Resolvers, gRPC Services, Request Validation, ViewModels. |
+| **`clean-architecture-domain`** | `🏷️ Both (Shared)` | Design and implement pure Domain Layer components. | Schema-First Zod (`BaseEntity`), pure data Entities, Repository interfaces, Use Case contracts. |
+| **`clean-architecture-application`**| `🏷️ Backend` | Implement Application Layer Use Cases and Business Workflows. | Use Case implementations, `safeParseAsync` validation, typed error hierarchy (`lib/error.ts`). |
+| **`clean-architecture-infrastructure`** | `🏷️ Backend` | Implement Infrastructure Layer adapters and external integrations. | Drizzle generic `Repository<T,C,U>` base (`super(db, table)`), custom queries, Argon2 auth. |
+| **`clean-architecture-presentation`**| `🏷️ Both (Shared)` | Implement Presentation Layer handlers, controllers, and APIs. | Hono REST Controllers, Ponytail grouping, input validation, structured API responses. |
 | **`clean-architecture-typespec`** | `🏷️ Both (Fullstack)` | Design TypeSpec (`.tsp`) API specs & generate TypeScript Axios/React Query Client SDKs. | Model Aliasing (`Domain.Entity`), `OmitProperties`/`OptionalProperties` DTO transforms, Hey-API. |
 | **`clean-architecture-frontend`** | `🏷️ Frontend` | Frontend architecture: Separation of Design System (`packages/ui`) vs Combined Components (`apps/web`). | Primitives vs Compound UI, react-hook-form, TanStack Table, Client SDK. |
 | **`clean-architecture-format`** | `🏷️ Both (Fullstack)` | Enforce naming conventions, file organization, and architectural linting rules. | File suffixes (`.entity`, `.usecase`, etc.), dependency boundary rules, ESLint / Depcruise configs. |
-| **`clean-architecture-validator`** | `🏷️ Both (Fullstack)` | Audit and validate codebase against Clean Architecture rules. | Detect layer leaks, illegal inward-to-outward imports, bypassed use cases. |
+| **`clean-architecture-validator`** | `🏷️ Both (Fullstack)` | 🛡️ **AI Auditor**: Audit codebase for Clean Architecture violations. | Detect layer leaks, illegal `any`/`@ts-ignore`, bypassed use cases, synchronous `.parse()`. |
 
 ---
 
