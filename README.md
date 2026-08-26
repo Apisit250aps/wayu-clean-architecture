@@ -82,7 +82,8 @@ wayu-clean-architecture/
     ├── clean-architecture-setup/
     │   ├── SKILL.md
     │   └── references/
-    │       └── architecture-overview.md
+    │       ├── architecture-overview.md
+    │       └── starter-libraries.md
     ├── clean-architecture-domain/
     │   ├── SKILL.md
     │   └── references/

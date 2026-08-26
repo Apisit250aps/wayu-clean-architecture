@@ -1,117 +1,142 @@
 # Infrastructure Layer Patterns & Code Templates
 
-## 1. Concrete Repository Implementation (Prisma Example)
+## 1. Drizzle Generic Base Repository (`database/repository.ts`)
 
 ```typescript
-// src/infrastructure/database/repositories/prisma-user.repository.ts
-import { PrismaClient } from '@prisma/client';
-import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
-import { User } from '../../../domain/entities/user.entity';
-import { Email } from '../../../domain/value-objects/email.vo';
+// packages/database/src/repository.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { BaseRepository } from '@shop/domains';
+import type { Database } from './db';
+import { PgTable } from 'drizzle-orm/pg-core';
+import { eq } from 'drizzle-orm';
 
-export class PrismaUserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaClient) {}
-
-  async findById(id: string): Promise<User | null> {
-    const record = await this.prisma.user.findUnique({ where: { id } });
-    if (!record) return null;
-    return this.toDomain(record);
+export abstract class Repository<
+  T,
+  C extends Record<string, unknown>,
+  U extends Record<string, unknown>,
+> extends BaseRepository<T, C, U> {
+  constructor(
+    protected readonly db: Database,
+    protected readonly table: PgTable<any>,
+  ) {
+    super();
   }
 
-  async findByEmail(email: Email): Promise<User | null> {
-    const record = await this.prisma.user.findUnique({
-      where: { email: email.getValue() },
-    });
-    if (!record) return null;
-    return this.toDomain(record);
-  }
-
-  async save(user: User): Promise<void> {
-    await this.prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        name: user.getName(),
-        email: user.getEmail().getValue(),
-        isActive: user.getIsActive(),
-      },
-      create: {
-        id: user.id,
-        name: user.getName(),
-        email: user.getEmail().getValue(),
-        isActive: user.getIsActive(),
-        createdAt: user.createdAt,
-      },
-    });
+  async create(entity: C): Promise<T> {
+    const [result] = await this.db
+      .insert(this.table)
+      .values(entity)
+      .returning();
+    return result as T;
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.user.delete({ where: { id } });
+    await this.db.delete(this.table).where(eq((this.table as any).id, id));
   }
 
-  private toDomain(record: {
-    id: string;
-    name: string;
-    email: string;
-    isActive: boolean;
-    createdAt: Date;
-  }): User {
-    return User.reconstitute(
-      record.id,
-      record.name,
-      Email.create(record.email),
-      record.isActive,
-      record.createdAt
-    );
-  }
-}
-```
-
----
-
-## 2. External Service Adapter (Nodemailer Example)
-
-```typescript
-// src/infrastructure/external-services/nodemailer-email.service.ts
-import nodemailer, { Transporter } from 'nodemailer';
-import { IEmailService } from '../../application/ports/email-service.port';
-
-export class NodemailerEmailService implements IEmailService {
-  private transporter: Transporter;
-
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'localhost',
-      port: Number(process.env.SMTP_PORT) || 587,
-      auth: {
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || '',
-      },
-    });
+  async findAll(): Promise<T[]> {
+    const results = await this.db.select().from(this.table);
+    return results as T[];
   }
 
-  async sendWelcomeEmail(toEmail: string, userName: string): Promise<void> {
-    await this.transporter.sendMail({
-      from: '"My Clean App" <no-reply@example.com>',
-      to: toEmail,
-      subject: 'Welcome to our platform!',
-      html: `<p>Hello ${userName}, welcome aboard!</p>`,
-    });
+  async findById(id: string): Promise<T | null> {
+    const [result] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq((this.table as any).id, id));
+    return (result as T) || null;
+  }
+
+  async update(id: string, entity: U): Promise<T> {
+    const [result] = await this.db
+      .update(this.table)
+      .set(entity)
+      .where(eq((this.table as any).id, id))
+      .returning();
+    return result as T;
   }
 }
 ```
 
 ---
 
-## 3. ID Generator Adapter (UUID Example)
+## 2. Drizzle Schema Helpers & UUIDv7 (`database/lib/utils.ts`)
 
 ```typescript
-// src/infrastructure/external-services/uuid-id-generator.service.ts
-import { v4 as uuidv4 } from 'uuid';
-import { IIdGenerator } from '../../application/ports/id-generator.port';
+// packages/database/src/lib/utils.ts
+import { uuid, timestamp } from 'drizzle-orm/pg-core';
+import { v7 as uuidv7 } from 'uuid';
 
-export class UuidIdGenerator implements IIdGenerator {
-  generate(): string {
-    return uuidv4();
+export const generateUUID = () => uuidv7();
+
+export function primaryKeyUuid7<T extends string>(columnName: T) {
+  return uuid(columnName)
+    .primaryKey()
+    .$defaultFn(() => generateUUID());
+}
+
+export function updatedAtTimestamp<T extends string>(columnName: T) {
+  return timestamp(columnName)
+    .$onUpdate(() => new Date())
+    .notNull();
+}
+
+export function createdAtTimestamp<T extends string>(columnName: T) {
+  return timestamp(columnName).defaultNow().notNull();
+}
+```
+
+---
+
+## 3. Concrete Repository Implementation (`infrastructures/repositories/user.repo.ts`)
+
+```typescript
+// packages/infrastructures/src/repositories/user.repo.ts
+import type { Database } from '@shop/database/db';
+import { User } from '@shop/domains/entities';
+import { IUserRepository } from '@shop/domains/repositories/user';
+import { user } from '@shop/database/schema';
+import { Repository } from '@shop/database/repository';
+import { CreateUser, UpdateUser } from '@shop/domains/schema/user';
+import { eq } from 'drizzle-orm';
+
+export default class UserRepository
+  extends Repository<User, CreateUser, UpdateUser>
+  implements IUserRepository
+{
+  constructor(db: Database) {
+    super(db, user);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const [result] = await this.db
+      .select()
+      .from(this.table)
+      .where(eq(user.email, email));
+    return (result as User) || null;
   }
 }
+```
+
+---
+
+## 4. Argon2 Password Hasher Adapter (`infrastructures/lib/password.ts`)
+
+```typescript
+// packages/infrastructures/src/lib/password.ts
+import argon2 from 'argon2';
+
+export const hash = async (password: string): Promise<string> => {
+  return argon2.hash(password);
+};
+
+export const verify = async ({
+  password,
+  hash,
+}: {
+  password: string;
+  hash: string;
+}): Promise<boolean> => {
+  return await argon2.verify(hash, password);
+};
 ```

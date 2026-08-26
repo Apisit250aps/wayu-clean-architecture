@@ -90,4 +90,6 @@ src/
 
 ## 📚 Further Reference
 
-See [architecture-overview.md](references/architecture-overview.md) for deep-dive architectural rules and dependency inversion diagrams.
+- [starter-libraries.md](references/starter-libraries.md): Built-in custom utilities, `lib/entity.ts` Zod builder, `lib/error.ts`, generic `Repository` for Drizzle, UUIDv7 helpers, and Argon2 hasher.
+- [architecture-overview.md](references/architecture-overview.md): Deep-dive architectural rules, Monorepo structure, and dependency inversion diagrams.
+

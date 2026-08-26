@@ -1,80 +1,152 @@
 # Application Layer Patterns & Code Templates
 
-## 1. Input / Output DTO Pattern
+## 1. Application Error Hierarchy & Response Wrapper (`lib/error.ts`)
 
 ```typescript
-// src/application/dtos/register-user.dto.ts
-export interface RegisterUserInputDto {
-  name: string;
-  email: string;
-}
+// packages/applications/src/lib/error.ts
+export type AppErrorCode =
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'INTERNAL_ERROR'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN';
 
-export interface RegisterUserOutputDto {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: string;
-}
-```
-
----
-
-## 2. Application Port (External Service Interface)
-
-```typescript
-// src/application/ports/email-service.port.ts
-export interface IEmailService {
-  sendWelcomeEmail(toEmail: string, userName: string): Promise<void>;
-}
-```
-
-```typescript
-// src/application/ports/id-generator.port.ts
-export interface IIdGenerator {
-  generate(): string;
-}
-```
-
----
-
-## 3. Use Case / Interactor Implementation
-
-```typescript
-// src/application/use-cases/register-user.usecase.ts
-import { User } from '../../domain/entities/user.entity';
-import { Email } from '../../domain/value-objects/email.vo';
-import { IUserRepository } from '../../domain/repositories/user.repository.interface';
-import { IEmailService } from '../ports/email-service.port';
-import { IIdGenerator } from '../ports/id-generator.port';
-import { RegisterUserInputDto, RegisterUserOutputDto } from '../dtos/register-user.dto';
-
-export class RegisterUserUseCase {
+export class AppError extends Error {
   constructor(
-    private readonly userRepo: IUserRepository,
-    private readonly emailService: IEmailService,
-    private readonly idGenerator: IIdGenerator
-  ) {}
+    message: string,
+    public readonly statusCode: number = 500,
+    public readonly code?: AppErrorCode,
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
 
-  async execute(input: RegisterUserInputDto): Promise<RegisterUserOutputDto> {
-    const email = Email.create(input.email);
+export class NotFoundError extends AppError {
+  constructor(message = 'Not Found') {
+    super(message, 404, 'NOT_FOUND');
+    this.name = 'NotFoundError';
+  }
+}
 
-    const existingUser = await this.userRepo.findByEmail(email);
-    if (existingUser) {
-      throw new Error('A user with this email already exists.');
+export class ValidationError extends AppError {
+  constructor(message = 'Validation Error') {
+    super(message, 400, 'VALIDATION_ERROR');
+    this.name = 'ValidationError';
+  }
+}
+
+export class DuplicateError extends AppError {
+  constructor(message = 'Duplicate') {
+    super(message, 409, 'VALIDATION_ERROR');
+    this.name = 'DuplicateError';
+  }
+}
+
+export class InternalError extends AppError {
+  constructor(message = 'Internal Server Error') {
+    super(message, 500, 'INTERNAL_ERROR');
+    this.name = 'InternalError';
+  }
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message = 'Unauthorized') {
+    super(message, 401, 'UNAUTHORIZED');
+    this.name = 'UnauthorizedError';
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Forbidden') {
+    super(message, 403, 'FORBIDDEN');
+    this.name = 'ForbiddenError';
+  }
+}
+
+export type ApiResponse<T> = {
+  message: string;
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: AppErrorCode;
+};
+
+export const throwAppError = (error: unknown): never => {
+  if (error instanceof AppError) throw error;
+  throw new InternalError(error instanceof Error ? error.message : 'Unknown error');
+};
+```
+
+---
+
+## 2. Use Case Implementation (`use-cases/user.usecase.ts`)
+
+```typescript
+// packages/applications/src/use-cases/user.usecase.ts
+import {
+  ICreateUserContext,
+  ICreateUserUseCase,
+  IGetUserContext,
+  IGetUserUseCase,
+  IUpdateUserContext,
+  IUpdateUserUseCase,
+  IDeleteUserContext,
+  IDeleteUserUseCase,
+} from '@shop/domains/applications/users';
+import { User } from '@shop/domains/entities';
+import { IUserRepository } from '@shop/domains/repositories/user';
+import { createUserSchema, updateUserSchema } from '@shop/domains/schema/user';
+import { ValidationError, NotFoundError, DuplicateError } from '../lib/error';
+
+export class CreateUserUseCase implements ICreateUserUseCase {
+  constructor(private readonly userRepository: IUserRepository) {}
+
+  async execute(context: ICreateUserContext): Promise<User> {
+    const parsed = await createUserSchema.safeParseAsync(context.data);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid user data: ' + parsed.error.message);
     }
 
-    const userId = this.idGenerator.generate();
-    const newUser = User.create(userId, input.name, email);
+    // Invariant business check
+    const existing = await this.userRepository.findByEmail(parsed.data.email);
+    if (existing) {
+      throw new DuplicateError('User with this email already exists.');
+    }
 
-    await this.userRepo.save(newUser);
-    await this.emailService.sendWelcomeEmail(newUser.getEmail().getValue(), newUser.getName());
+    return this.userRepository.create(parsed.data);
+  }
+}
 
-    return {
-      id: newUser.id,
-      name: newUser.getName(),
-      email: newUser.getEmail().getValue(),
-      createdAt: newUser.createdAt.toISOString(),
-    };
+export class GetUserUseCase implements IGetUserUseCase {
+  constructor(private readonly userRepository: IUserRepository) {}
+
+  async execute(context: IGetUserContext): Promise<User | null> {
+    const user = await this.userRepository.findById(context.id);
+    if (!user) {
+      throw new NotFoundError(`User with ID ${context.id} not found.`);
+    }
+    return user;
+  }
+}
+
+export class UpdateUserUseCase implements IUpdateUserUseCase {
+  constructor(private readonly userRepository: IUserRepository) {}
+
+  async execute(context: IUpdateUserContext): Promise<User> {
+    const parsed = await updateUserSchema.safeParseAsync(context.data);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid update data');
+    }
+    return this.userRepository.update(context.id, parsed.data);
+  }
+}
+
+export class DeleteUserUseCase implements IDeleteUserUseCase {
+  constructor(private readonly userRepository: IUserRepository) {}
+
+  async execute(context: IDeleteUserContext): Promise<void> {
+    await this.userRepository.delete(context.id);
   }
 }
 ```
