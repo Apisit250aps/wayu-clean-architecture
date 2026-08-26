@@ -44,6 +44,7 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 
 | Skill Name | Description | Key Focus |
 | :--- | :--- | :--- |
+| **`clean-architecture-feature`** | 🚀 **Master Orchestrator**: End-to-end generator creating complete features/modules across ALL Clean Architecture layers. | 7-step pipeline (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verify). |
 | **`clean-architecture-monorepo`** | Specialized blueprints for Turborepo Monorepo (domains -> database -> applications -> infrastructures -> web). | Monorepo package boundaries, Hono Controller, Ponytail principle, Drizzle ORM. |
 | **`clean-architecture-setup`** | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
 | **`clean-architecture-domain`** | Design and implement pure Domain Layer components. | Entities, Value Objects, Domain Events, Repository Interfaces, Business Invariants. |
@@ -89,6 +90,11 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 wayu-clean-architecture/
 ├── README.md
 └── skills/
+    ├── clean-architecture-feature/
+    │   ├── SKILL.md
+    │   └── references/
+    │       ├── feature-generation-guide.md
+    │       └── end-to-end-example.md
     ├── clean-architecture-monorepo/
     │   └── SKILL.md
     ├── clean-architecture-setup/
