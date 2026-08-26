@@ -12,8 +12,9 @@ Use this skill to apply consistent file naming, organize project structures, for
 ## 🎯 Primary Responsibilities
 
 1. **Standardize File Suffixes**: Ensure all files clearly declare their architectural role via standardized naming conventions.
-2. **Setup Dependency Boundary Linting**: Configure tools like ESLint `import/no-restricted-paths`, Dependency Cruiser, or ArchUnit to prevent unauthorized imports across layers.
-3. **Format & Code Consistency**: Maintain clean code standards, formatting, and file co-location rules.
+2. **Setup Code Formatting (Prettier)**: Configure `.prettierrc` (`semi: true`, `singleQuote: true`, `tabWidth: 2`, `trailingComma: "all"`) and `.prettierignore` to ensure consistent code styling across all layers.
+3. **Setup Dependency Boundary Linting**: Configure tools like ESLint `import/no-restricted-paths`, Dependency Cruiser, or ArchUnit to prevent unauthorized imports across layers.
+4. **Enforce Type & Lint Integrity**: Zero tolerance for `@ts-ignore`, `eslint-disable`, and `any`.
 
 ---
 

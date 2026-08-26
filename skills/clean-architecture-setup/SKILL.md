@@ -74,7 +74,12 @@ src/
      - Result/Either monad or standard error handling types.
      - `UseCase<TInput, TOutput>` interface contract.
 
-4. **Setup Composition Root**:
+4. **Setup Code Formatting & Linting (Prettier & ESLint)**:
+   - Create `.prettierrc` and `.prettierignore` to standardize formatting (`singleQuote: true`, `semi: true`, `tabWidth: 2`, `trailingComma: "all"`).
+   - Add `"format"` and `"format:check"` npm scripts.
+   - Configure `.dependency-cruiser.cjs` for layer boundary checks.
+
+5. **Setup Composition Root**:
    - Create a single entry point (e.g., `src/main.ts` or `src/container.ts`) where all concrete infrastructure implementations are instantiated and injected into Application Use Cases, and Use Cases are injected into Presentation Controllers.
 
 ---

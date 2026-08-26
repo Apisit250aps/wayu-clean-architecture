@@ -35,7 +35,8 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 
 | Skill Name | Description | Key Focus |
 | :--- | :--- | :--- |
-| **`clean-architecture-setup`** | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, boundary configuration. |
+| **`clean-architecture-monorepo`** | Specialized blueprints for Turborepo Monorepo (domains -> database -> applications -> infrastructures -> web). | Monorepo package boundaries, Hono Controller, Ponytail principle, Drizzle ORM. |
+| **`clean-architecture-setup`** | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
 | **`clean-architecture-domain`** | Design and implement pure Domain Layer components. | Entities, Value Objects, Domain Events, Repository Interfaces, Business Invariants. |
 | **`clean-architecture-application`** | Implement Application Layer Use Cases and Business Workflows. | Use Cases, Interactors, CQRS Commands/Queries, DTOs, Service Ports, Mappers. |
 | **`clean-architecture-infrastructure`** | Implement Infrastructure Layer adapters and external integrations. | Database Repositories (Prisma, TypeORM, GORM, EF Core, etc.), External APIs, Message Brokers. |
@@ -79,6 +80,8 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 wayu-clean-architecture/
 ├── README.md
 └── skills/
+    ├── clean-architecture-monorepo/
+    │   └── SKILL.md
     ├── clean-architecture-setup/
     │   ├── SKILL.md
     │   └── references/

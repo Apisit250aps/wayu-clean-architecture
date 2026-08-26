@@ -9,7 +9,38 @@ When writing or modifying code in Clean Architecture:
 
 ---
 
-## 2. Monorepo Boundary Enforcement (`.dependency-cruiser.cjs`)
+## 2. Prettier Formatting Configuration (`.prettierrc`)
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+### `.prettierignore`
+```text
+node_modules
+.next
+out
+build
+dist
+coverage
+*.log
+package-lock.json
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+.agents
+```
+
+---
+
+## 3. Monorepo Boundary Enforcement (`.dependency-cruiser.cjs`)
 
 ```javascript
 /** @type {import('dependency-cruiser').IConfiguration} */

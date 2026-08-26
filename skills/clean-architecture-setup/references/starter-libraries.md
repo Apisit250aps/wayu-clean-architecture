@@ -11,7 +11,8 @@ This reference provides the battle-tested custom libraries and utilities extract
 4. [Database: Drizzle Generic Base Repository (`repository.ts`)](#4-database-drizzle-generic-base-repository-repositoryts)
 5. [Database: Schema Helpers & UUIDv7 (`lib/utils.ts` & `lib/uuid.ts`)](#5-database-schema-helpers--uuidv7-libutilsts--libuuidts)
 6. [Infrastructure: Argon2 Password Hasher (`lib/password.ts`)](#6-infrastructure-argon2-password-hasher-libpasswordts)
-7. [Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)](#7-tools-typespec-generator-with-ts-morph-scriptsgeneratets)
+7. [Tools: Prettier Formatting Setup (`.prettierrc` & `.prettierignore`)](#7-tools-prettier-formatting-setup-prettierrc--prettierignore)
+8. [Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)](#8-tools-typespec-generator-with-ts-morph-scriptsgeneratets)
 
 ---
 
@@ -423,7 +424,47 @@ export const verify = async ({
 
 ---
 
-## 7. Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)
+## 7. Tools: Prettier Formatting Setup (`.prettierrc` & `.prettierignore`)
+
+### `.prettierrc`
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+### `.prettierignore`
+```text
+node_modules
+.next
+out
+build
+dist
+coverage
+*.log
+package-lock.json
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+.agents
+```
+
+### `package.json` formatting scripts
+```json
+"scripts": {
+  "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+  "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+}
+```
+
+---
+
+## 8. Tools: TypeSpec Generator with ts-morph (`scripts/generate.ts`)
 
 Automatically generates TypeSpec (`.tsp`) models from TypeScript Domain Entities for OpenAPI/Client generation.
 
