@@ -24,6 +24,15 @@ npx skills add https://github.com/Apisit250aps/wayu-clean-architecture
 npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-setup
 ```
 
+### Install a specific Release / Version Tag 🏷️
+```bash
+# Install from a specific version/tag (e.g. v1.0.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0
+
+# Install a specific skill from a release version
+npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0 --skill clean-architecture-monorepo
+```
+
 ### Install globally (available in all projects)
 ```bash
 npx skills add Apisit250aps/wayu-clean-architecture -g
