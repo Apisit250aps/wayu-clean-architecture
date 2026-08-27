@@ -48,6 +48,7 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 | **`clean-architecture-monorepo`** | `🏷️ Both (Fullstack)` | 📦 **Package Initializer**: Scaffold new packages (`domains`, `database`, `applications`, `infrastructures`, etc.). | Generates `package.json` with `#imports`, `tsconfig.json`, `eslint.config.mjs` layer boundaries. |
 | **`clean-architecture-setup`** | `🏷️ Both (Fullstack)` | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
 | **`clean-architecture-domain`** | `🏷️ Both (Shared)` | Design and implement pure Domain Layer components. | Schema-First Zod (`BaseEntity`), pure data Entities, Repository interfaces, Use Case contracts. |
+| **`clean-architecture-database-drizzle`** | `🏷️ Backend` | Scaffold, configure, and implement the Database Layer using Drizzle ORM. | Drizzle table schemas, UUIDv7 helpers, `defineRelationsPart`, Drizzle client, base `Repository<T,C,U>`. |
 | **`clean-architecture-application`**| `🏷️ Backend` | Implement Application Layer Use Cases and Business Workflows. | Use Case implementations, `safeParseAsync` validation, typed error hierarchy (`lib/error.ts`). |
 | **`clean-architecture-infrastructure`** | `🏷️ Backend` | Implement Infrastructure Layer adapters and external integrations. | Drizzle generic `Repository<T,C,U>` base (`super(db, table)`), custom queries, Argon2 auth. |
 | **`clean-architecture-presentation`**| `🏷️ Both (Shared)` | Implement Presentation Layer handlers, controllers, and APIs. | Hono REST Controllers, Ponytail grouping, input validation, structured API responses. |
@@ -110,6 +111,10 @@ wayu-clean-architecture/
     │   ├── SKILL.md
     │   └── references/
     │       └── domain-patterns.md
+    ├── clean-architecture-database-drizzle/
+    │   ├── SKILL.md
+    │   └── references/
+    │       └── drizzle-patterns.md
     ├── clean-architecture-application/
     │   ├── SKILL.md
     │   └── references/
