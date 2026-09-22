@@ -14,3 +14,10 @@ Use this skill when changing an HTTP-facing feature: its TypeSpec contract, gene
 3. Implement presentation handlers that validate transport input, invoke application use cases, and map typed errors to transport responses. Read [presentation patterns](references/presentation-patterns.md).
 4. Keep controllers free of direct repository or database access.
 
+## Shared boundaries
+
+Search existing request validators, response/error mappers, pagination helpers, and generated DTOs before adding a parallel implementation. Group routes by business module and share transport plumbing while leaving authorization and lifecycle policy in core.
+
+Build actor/security context from authenticated middleware. Never spread request data over trusted permissions, admin status, or active tenant fields. Propagate tenant scope and revision/idempotency inputs required by the use-case contract. Expose only client-writable fields, even when the entity model has more properties.
+
+Use core constants for stable statuses/actions and preserve generated contracts through regeneration. Check representative payloads, response envelopes, error codes, pagination, and nullable/date conversions at the boundary; a shared helper must not hide a contract mismatch.

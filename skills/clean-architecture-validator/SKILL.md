@@ -1,11 +1,8 @@
 ---
 name: clean-architecture-validator
 description: Audit and validate codebases against Clean Architecture monorepo rules — detects layer boundary leaks, bypassed use cases, illegal any/@ts-ignore, missing safeParseAsync, unhandled typed errors, and improper cross-package imports.
-tags:
-  - both
-  - fullstack
-  - backend
-  - frontend
+metadata:
+  tags: both, fullstack, backend, frontend
 ---
 
 # Clean Architecture Validator & Auditor Skill 🛡️
@@ -27,7 +24,10 @@ When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find 
 4. **Validation Flaws**: Using synchronous `.parse()` inside use cases instead of `await schema.safeParseAsync()`.
 5. **Untyped Generic Errors**: Throwing raw `new Error()` instead of typed application errors (`NotFoundError`, `ValidationError`, `DuplicateError`, `UnauthorizedError`, `ForbiddenError`).
 6. **Persistence Leaks into Domain**: Importing Drizzle ORM, table schemas, or DB connection inside `packages/domains`.
-7. **Frontend Design System Pollution**: `packages/ui` importing business logic, `react-hook-form`, or backend packages.
+7. **Frontend Boundary Leaks**: `packages/ui` importing business-specific hooks, generated services, or backend packages. Domain-neutral RHF fields, tables, and overlays are permitted.
+8. **Missing Module Constants**: New modules/tables without owning constants, explicit aggregate permission mapping, or affected feature/action/default-grant catalog updates.
+9. **Tenant and Workflow Gaps**: Caller-controlled security attributes, unscoped resource access, cross-tenant references, optional dependencies that skip invariants, and revision checks without atomic persistence enforcement.
+10. **Duplicated or Inefficient Patterns**: Copied parsing/guards/mappers, oversized shared helper interfaces, N+1 queries, unbounded lists, and unsupported performance claims.
 
 ---
 
@@ -38,10 +38,10 @@ When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find 
 | **`packages/domains`** | Pure language types, `zod`, `uuid` (`uuidv7`). | `@<project>/database`, `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, ORMs, HTTP libs. | Any external dependency other than Zod/UUID; ORM schemas inside domain. |
 | **`packages/database`** | `@<project>/domains`, `drizzle-orm`, `pg`, `uuid`. | `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`. | Business logic in DB schemas; directly implementing use cases. |
 | **`packages/applications`** | `@<project>/domains` (schemas, entities, interfaces). | `@<project>/database`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, HTTP types (`Request`/`Response`). | Direct database queries; using `.parse()` instead of `safeParseAsync`; throwing untyped raw `Error`. |
-| **`packages/infrastructures`**| `@<project>/domains`, `@<project>/database`, `drizzle-orm`, `argon2`. | `@<project>/applications`, `@<project>/ui`, `@<project>/client`. | Re-implementing base CRUD methods already in `Repository<T, C, U>`; reading `process.env` inside repos. |
+| **`packages/infrastructures`**| Domain/database and adapter dependencies; isolated composition roots may import application implementations. | UI or browser dependencies inside repositories; concrete adapters imported by core. | Duplicated CRUD mechanics; missing scoped/atomic write semantics; transaction connection not propagated. |
 | **`packages/client`** | `@typespec/*`, `@hey-api/*`, `Domain.Entity.*`. | Direct usage of `Domain.Entity.<Model>` in services (must alias in `spec/models/`). | Rewriting request DTO properties manually instead of using `OmitProperties`/`OptionalProperties`. |
-| **`packages/ui`** | Pure React, Tailwind CSS, Lucide icons, clsx. | `@<project>/domains`, `@<project>/database`, `@<project>/applications`, `@<project>/infrastructures`, `react-hook-form`, TanStack Table. | Putting compound forms or domain-aware components inside `packages/ui`. |
-| **`apps/web`** | All `@<project>/*` packages. | Direct DB queries bypassing use cases. | Controller calling Repository directly; Controller missing Ponytail grouping. |
+| **`packages/ui`** | React, styling/accessibility libraries, RHF Controllers, generic table/overlay behavior. | Backend packages, generated services, business-specific module hooks. | Tenant policy, permission decisions, or app data fetching inside generic UI. |
+| **`apps/web`** | UI, generated client, pure domain contracts/constants, explicit auth integration boundaries. | DB connections or backend compositions in browser modules. | Raw transport duplicated in views; form state mirrored with effects. |
 
 ---
 
@@ -57,19 +57,19 @@ npm run lint          # 2. ESLint no-restricted-imports check
 
 ### 2. Search for Zero-Tolerance Violations
 Search for illegal bypasses across all packages:
-- `grep -rn "@ts-ignore" packages/ apps/`
-- `grep -rn "eslint-disable" packages/ apps/`
-- `grep -rn ": any" packages/ apps/`
+- `rg -n '@ts-ignore|eslint-disable|: any' packages/*/src apps/*/src`
 
 ### 3. Check Application Use Cases
-- Verify every usecase validates with `await schema.safeParseAsync(context.data)`.
+- Verify command input uses `await schema.safeParseAsync(context.data)` or the shared `parseSchemaOrThrow`; inspect helper behavior rather than requiring copied validation code.
 - Verify errors use `ValidationError`, `NotFoundError`, `DuplicateError`, etc.
 - Verify repositories are injected via constructor interface (`I<Module>Repository`).
 
-### 4. Check Presentation Controllers (`apps/web`)
-- Verify controllers inject Use Cases from `shared/applications/<module>.usecase.ts`.
+### 4. Check Presentation Controllers (discover `apps/api` or the existing server entry)
+- Verify controllers use the established composition root to obtain Use Cases.
 - Verify no controller injects or calls a Repository directly.
 - Verify endpoints follow the **Ponytail Principle** (grouped by domain module, not over-fragmented into single-method files).
+
+Audit is read-only unless changes were requested. Report source path, failing scenario, evidence, impact, and proposed remediation. Distinguish existing conventions from required improvements; use the current core/frontend guidance where older examples disagree.
 
 ---
 

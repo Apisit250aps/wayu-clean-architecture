@@ -1,204 +1,71 @@
-# Domain Layer Patterns & Code Templates
+# Domain design: modules, constants, schemas, and ports
 
-## 0. Core Abstractions (`src/index.ts`)
+## Ownership and layout
 
-The root entry point exports the two base abstract classes that all other packages depend on:
+The reference project groups schema/entity/repository files by capability and groups use-case contracts in `src/applications/<module>/`. Preserve these imports when extending it. A large module can introduce `schema/form/{template,plan,submission}.ts` with a compatibility barrel, provided package export resolution and the entity-to-TypeSpec generator are updated together.
 
-```typescript
-// packages/domains/src/index.ts
-export abstract class BaseUseCase<Context, TOutput> {
-  abstract execute(context: Context): Promise<TOutput>;
-}
+Domain owns business values, source facts, state transitions, pure calculations, entity shapes, repository contracts, security-context types, and `IUnitOfWork`. Domain does not query databases or instantiate adapters.
 
-export abstract class BaseRepository<T, Create, Update> {
-  abstract findAll(): Promise<T[]>;
-  abstract findById(id: string): Promise<T | null>;
-  abstract create(entity: Create): Promise<T>;
-  abstract update(id: string, entity: Update): Promise<T>;
-  abstract delete(id: string): Promise<void>;
-}
+## Constants are part of module delivery
 
-export * from './applications';
+For every new module or table:
+
+- Create or update `src/constants/<module>.ts` and its public export.
+- Identify resource codes and actual finite values (status, action, mode, limits). Reuse an existing aggregate's constants for its internal tables; record that mapping explicitly.
+- Add system permission actions and feature metadata only where the business capability requires them; update the central catalogs and explicit seed grants together.
+- Reuse the same values in Zod enums, application checks, DB enum definitions, and API contracts where supported. Keep the dependency direction inward.
+- Do not put mutable tenant settings, translated UI labels, SQL names, credentials, or arbitrary invented defaults in domain constants.
+
+Example for a new inspection capability:
+
+```ts
+/** Stable business vocabulary; child tables share the inspection capability. */
+export const INSPECTION_RESOURCES = {
+  PLAN: 'inspection_plan',
+  ANSWER: 'inspection_answer',
+} as const;
+
+export const INSPECTION_STATUS_VALUES = ['DRAFT', 'ACTIVE', 'CLOSED'] as const;
+export type InspectionStatus = (typeof INSPECTION_STATUS_VALUES)[number];
+
+export const INSPECTION_LATE_POLICY_VALUES = ['ALLOW', 'DENY'] as const;
+export type InspectionLatePolicy =
+  (typeof INSPECTION_LATE_POLICY_VALUES)[number];
 ```
 
----
+Constants are leaf modules: avoid importing schema runtime values back into a constants module consumed by that schema. Derive union types from constants and use `satisfies` to check catalog shapes without widening literal values. A built-in catalog union need not close a runtime extension point: the reference project's `PermissionAction = string` supports dynamic action records while `SystemPermissionAction` enumerates built-ins. Validate dynamic action syntax and ownership at its registration boundary.
 
-## 1. Zod Entity Builder (`lib/entity.ts`)
+## Schema-first contracts
 
-```typescript
-// packages/domains/src/lib/entity.ts
-import { core, util, z } from 'zod';
-import { v7 as uuidv7 } from 'uuid';
+Reuse the project's `BaseEntity`, `AppendOnlyBaseEntity`, and typed field helpers after inspecting their semantics. Do not copy older helper implementations with `any` into a new module.
 
-type BaseFieldOptions<T> = {
-  required?: boolean;
-  nullable?: boolean;
-  default?: util.NoUndefined<core.output<T>> | (() => T);
-};
+Keep a reusable object shape and derive operation-specific create/update schemas before attaching operation-specific object refinements. If extending a refined Zod schema, use the installed version's supported API, such as `safeExtend`; do not assume all shape transformations preserve every invariant. See [Zod's schema APIs](https://zod.dev/api).
 
-type FieldResult<
-  TSchema extends z.ZodTypeAny,
-  TRequired extends boolean,
-  TNullable extends boolean,
-> = TNullable extends true
-  ? TRequired extends false
-    ? z.ZodNullable<z.ZodOptional<TSchema>>
-    : z.ZodNullable<TSchema>
-  : TRequired extends false
-    ? z.ZodOptional<TSchema>
-    : TSchema;
+Separate client-writable fields from server-owned tenant IDs, actor IDs, revisions, and audit timestamps. An entity schema is not automatically a safe create/update command. Derive allowed fields deliberately, then combine validated input with trusted scope inside the application layer. Distinguish omitted values from explicit nulls. When transforms exist, distinguish `z.input` from `z.output`.
 
-const createField = <
-  TSchema extends z.ZodTypeAny,
-  TRequired extends boolean = true,
-  TNullable extends boolean = false,
->(
-  schema: TSchema,
-  options: BaseFieldOptions<z.input<TSchema>> & {
-    required?: TRequired;
-    nullable?: TNullable;
-  } = {},
-): FieldResult<TSchema, TRequired, TNullable> => {
-  const { required = true as TRequired, nullable = false as TNullable } = options;
-  let result: z.ZodTypeAny = schema;
-  if (!required) result = result.optional();
-  if (nullable) result = result.nullable();
-  if (options.default !== undefined) result = result.default(options.default).unwrap();
-  return result as FieldResult<TSchema, TRequired, TNullable>;
-};
+Entities in this project are data classes implementing inferred schema shapes. Keep calculations in named pure functions rather than adding persistence or transport behavior to entities. Persist source facts and indispensable history; derive reproducible counts, totals, or display statuses unless a documented snapshot requirement needs stored values.
 
-export const StringField = (options: any = {}) => {
-  const base = z.string().max(options.max ?? 255).min(options.min ?? 0).trim();
-  return createField(options.required === false ? base : base.nonempty(), options);
-};
+## Purpose-specific ports
 
-export const UUIDField = (options: any = {}) => createField(z.uuid(), options);
-export const EmailField = (options: any = {}) => createField(z.email().trim().max(320), options);
-export const NumberField = (options: any = {}) => createField(z.number(), options);
-export const DateField = (options: any = {}) => createField(z.date(), options);
-export const TimestampField = () => DateField({ default: () => new Date() });
-export const BooleanField = (options: any = {}) => createField(z.boolean(), options);
+Use narrow interfaces named for business operations. Reuse the existing base repository when its CRUD semantics fit; history or append-only resources should expose only legal operations, not inherit destructive updates/deletes by convenience.
 
-export const BaseEntity = <T extends z.ZodRawShape>(schema: T) => {
-  return z.object({
-    id: UUIDField({ default: () => uuidv7() }),
-    ...schema,
-    createdAt: TimestampField(),
-    updatedAt: TimestampField(),
-  });
-};
-```
+Tenant-owned ports need tenant scope in their lookup/list/update operations, or an explicit documented ownership check before their result is used. Example contract, to be implemented in persistence rather than assumed to exist:
 
----
-
-## 2. Entity Schema Definition (`schema/user.ts`)
-
-```typescript
-// packages/domains/src/schema/user.ts
-import { z } from 'zod';
-import { BaseEntity, BooleanField, DateField, EmailField, StringField } from '../lib/entity';
-
-export const userSchema = BaseEntity({
-  name: StringField({ required: true }),
-  email: EmailField({ required: true }),
-  emailVerified: BooleanField({ default: () => false }),
-  image: StringField(),
-  firstName: StringField(),
-  lastName: StringField(),
-  isActive: BooleanField({ default: true }),
-  lastLogin: DateField({ nullable: true }),
-});
-
-export const createUserSchema = userSchema.omit({
-  id: true,
-  isActive: true,
-  lastLogin: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const updateUserSchema = userSchema.partial().omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type UserEntity = z.infer<typeof userSchema>;
-export type CreateUser = z.infer<typeof createUserSchema>;
-export type UpdateUser = z.infer<typeof updateUserSchema>;
-```
-
----
-
-## 3. Entity Class Implementation (`entities/user.ts`)
-
-```typescript
-// packages/domains/src/entities/user.ts
-import type { UserEntity } from '../schema/user';
-
-export class User implements UserEntity {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: boolean;
-  image: string;
-  firstName: string;
-  lastName: string;
-  isActive: boolean;
-  lastLogin: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-
-  constructor(data: UserEntity) {
-    this.id = data.id;
-    this.name = data.name;
-    this.email = data.email;
-    this.emailVerified = data.emailVerified;
-    this.image = data.image;
-    this.firstName = data.firstName;
-    this.lastName = data.lastName;
-    this.isActive = data.isActive;
-    this.lastLogin = data.lastLogin;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-  }
+```ts
+export interface IInspectionRepository {
+  findByIdAndOrganization(
+    id: string,
+    organizationId: string,
+  ): Promise<Inspection | null>;
+  updateIfRevisionMatches(input: {
+    id: string;
+    organizationId: string;
+    expectedRevision: number;
+    status: InspectionStatus;
+  }): Promise<Inspection | null>;
 }
 ```
 
----
+Here `null` on conditional update denotes no matching scoped row/revision; the application maps it according to its established conflict policy. The implementation must enforce the condition atomically.
 
-## 4. Repository Interface Contract (`repositories/user.repo.ts`)
-
-```typescript
-// packages/domains/src/repositories/user.repo.ts
-import { BaseRepository } from '..';
-import { User } from '../entities/user';
-import { CreateUser, UpdateUser } from '../schema/user';
-
-export interface IUserRepository extends BaseRepository<User, CreateUser, UpdateUser> {
-  findByEmail(email: string): Promise<User | null>;
-}
-```
-
----
-
-## 5. Use Case Interface & Context Types (`applications/users.usecase.ts`)
-
-```typescript
-// packages/domains/src/applications/users.usecase.ts
-import { BaseUseCase } from '..';
-import { User } from '../entities/user';
-import { CreateUser, UpdateUser } from '../schema/user';
-
-export type ICreateUserContext = { data: CreateUser };
-export type IUpdateUserContext = { id: string; data: UpdateUser };
-export type IDeleteUserContext = { id: string };
-export type IGetUserContext = { id: string };
-export type IGetUsersContext = { filter: Record<string, unknown> };
-
-export type ICreateUserUseCase = BaseUseCase<ICreateUserContext, User>;
-export type IUpdateUserUseCase = BaseUseCase<IUpdateUserContext, User>;
-export type IDeleteUserUseCase = BaseUseCase<IDeleteUserContext, void>;
-export type IGetUserUseCase = BaseUseCase<IGetUserContext, User | null>;
-export type IGetUsersUseCase = BaseUseCase<IGetUsersContext, User[]>;
-```
+Use bounded list filters, paging, and batch lookup ports when the workflow needs them. Keep Drizzle predicates, SQL types, connection objects, and query builders out of these contracts.

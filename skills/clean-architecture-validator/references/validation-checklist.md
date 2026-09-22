@@ -1,107 +1,63 @@
-# Clean Architecture Validation Checklist & Red Flags 🚩
+# Architecture verification checklist
 
-Use this checklist during code reviews, refactoring sessions, or automated audits to ensure the codebase remains clean, strictly bounded, and maintainable.
+Read the current core, frontend, and persistence entrypoints for ownership rules. Audit the actual target repository; examples are not proof of compliance.
 
----
+## Domain and constants
 
-## 🚩 Critical Red Flags
+- New modules/tables create or extend an owning constants module and export it.
+- Each table maps to a business aggregate and permission policy; internal tables need not have independent CRUD permissions.
+- Status/mode values are reused in schemas and use cases. Constants do not depend cyclically on schemas.
+- Feature/action catalogs contain no duplicates; default grants reference known actions and remain explicit.
+- Changed catalog snapshots have versioned migration handoffs without overwriting tenant-specific grants.
+- Domain stays independent of DB/HTTP/UI; public contracts use narrow typed ports.
+- Create/update schemas distinguish client-writable inputs from tenant/actor/audit/revision fields.
+- Append-only history contracts expose only legal operations.
+- Module splits preserve exports and generator discovery.
 
-### 1. The Direct DB Controller Anti-Pattern
-- **Violation**: An HTTP controller in `apps/web` imports a Repository or Drizzle `db` directly and queries the database without an Application Use Case.
-- **Why it's bad**: Bypasses input validation, invariant business rules, transaction boundaries, and authorization checks.
-- **Remedy**: Create a Use Case in `packages/applications`, instantiate it in `shared/applications/`, and invoke it from the Controller.
+## Application and tenant policy
 
----
+- Use cases accept injected domain ports and trusted execution context.
+- Async parsing uses the existing helper or safeParseAsync, and business logic consumes parsed output.
+- Resource operations check stored ownership; creates/lists validate destination tenant scope.
+- Child IDs, membership, roles, sites, and templates satisfy the expected tenant relationships.
+- Permission, feature entitlement, assignment, and lifecycle checks are distinct and use shared policy helpers.
+- No customer/role-name hardcoding or mutable singleton tenant state.
+- Missing required dependencies cannot silently skip an invariant.
+- Shared pure functions receive explicit time/policy inputs where needed.
+- Errors use the existing application hierarchy without leaking database internals.
 
-### 2. The Inward Dependency Inversion Violation (Layer Leak)
-- **Violation**: `packages/domains` imports from `packages/database`, `packages/applications`, or `packages/infrastructures`; or `packages/applications` imports from `packages/infrastructures`.
-- **Why it's bad**: Destroys modularity and creates circular dependencies.
-- **Remedy**: Invert the dependency by defining an interface in `packages/domains` (`src/repositories/<module>.repo.ts`) and implementing it in `packages/infrastructures`.
+## Persistence and concurrency
 
----
+- Reuse schema/query/row-mapping helpers where semantics match.
+- Tenant predicates apply to lookup, update, delete, batch, and list operations.
+- Uniqueness/idempotency requirements have database enforcement where needed.
+- Revision guards have an atomic update predicate or appropriate lock/isolation implementation.
+- Unit-of-work participation and rollback are verified at the real adapter boundary.
+- Read-model projections do not expose internal columns through casts.
+- Investigate N+1 lookups, unbounded lists, and repeated full scans; measure before claiming improvement.
+- Infrastructure composition code may wire applications to adapters; core never imports that composition.
+- Migrations are reviewed independently of whether they have been applied.
 
-### 3. The Synchronous `.parse()` Anti-Pattern
-- **Violation**: Calling `schema.parse(context.data)` inside a Use Case.
-- **Why it's bad**: Throws uncaught raw `ZodError` that breaks error formatting and bypasses async refinement rules (e.g. DB uniqueness checks in Zod).
-- **Remedy**: Always use `await schema.safeParseAsync(context.data)`:
-  ```typescript
-  const parsed = await createSchema.safeParseAsync(context.data);
-  if (!parsed.success) throw new ValidationError('Invalid data: ' + parsed.error.message);
-  ```
+## API and generated client
 
----
+- Controllers live at the actual server boundary, such as apps/api, and call use cases.
+- Authentication produces trusted security context; request fields cannot overwrite it.
+- Shared validators, response/error mappers, pagination, and generated DTOs are reused.
+- Public DTOs expose only intended fields and preserve scope/revision requirements.
+- Generated files are regenerated, not hand-edited; entity aliases and DTO transforms remain consistent.
+- Real response envelopes, errors, nulls, dates, and attachments are checked when their contracts change.
 
-### 4. The Untyped Raw `Error` Anti-Pattern
-- **Violation**: Throwing `new Error('User not found')` or returning HTTP status codes inside Use Cases (`res.status(404)`).
-- **Why it's bad**: Leaks HTTP concerns into Application layer, and fails structured API response formatting.
-- **Remedy**: Throw typed subclasses from `packages/applications/src/lib/error.ts`:
-  - `throw new NotFoundError('User not found');` (404)
-  - `throw new ValidationError('Invalid input');` (422)
-  - `throw new DuplicateError('Email already exists');` (409)
-  - `throw new UnauthorizedError('Invalid credentials');` (401)
-  - `throw new ForbiddenError('Insufficient permissions');` (403)
+## Frontend and UI
 
----
+- Reuse packages/ui primitives and shared fields/tables/overlays before adding markup.
+- Generic RHF Controller-backed fields and TanStack Table compositions are allowed in UI; business data fetching and tenant policy are not.
+- Web routes render feature views; hooks own client calls and query invalidation.
+- Query keys include the applicable tenant/filter scope.
+- Avoid effects for mirrored/derived/form state; use RHF and Query lifecycle APIs.
+- Follow the requested component rule forbidding try/catch/finally and handle request errors in hooks/callbacks.
+- Pure utilities and typed payload adapters replace repeated inline transformations.
+- Browser components do not import DB or backend compositions.
 
-### 5. The Zero-Tolerance Violation (`any` / `@ts-ignore` / `eslint-disable`)
-- **Violation**: Adding `// @ts-ignore`, `// eslint-disable`, or `: any` to silence compiler or lint errors.
-- **Why it's bad**: Masks runtime bugs, destroys type safety, and compromises system stability.
-- **Remedy**: Fix the underlying type signature, schema inference, or use `unknown` with type narrowing.
+## Evidence and reporting
 
----
-
-### 6. The UI Design System Pollution Anti-Pattern
-- **Violation**: Placing `react-hook-form`, `@tanstack/react-table`, or domain-specific forms inside `packages/ui`.
-- **Why it's bad**: Couples reusable design system primitives to application-specific state and domain logic.
-- **Remedy**: Keep `packages/ui` dumb (primitives only: `Button`, `Input`, `Dialog`). Place compound forms and feature UI in `apps/web/src/shared/components/` or `apps/web/src/features/`.
-
----
-
-### 7. The Direct `Domain.Entity` in TypeSpec Services Anti-Pattern
-- **Violation**: Directly using `Domain.Entity.Product` in TypeSpec HTTP service interfaces (`spec/services/product.tsp`).
-- **Why it's bad**: Couples external API contract directly to generated database entity representations and prevents DTO transforms.
-- **Remedy**: Alias the model in `spec/models/<module>.tsp` (`model Product is Domain.Entity.Product;`) and use `OmitProperties`/`OptionalProperties` for request DTOs.
-
----
-
-## ✅ Layer-by-Layer Verification Checklist
-
-### 1. `packages/domains`
-- [ ] No imports from other internal packages (`database`, `applications`, `infrastructures`, `ui`, `client`).
-- [ ] No ORM or HTTP libraries installed in `package.json`.
-- [ ] Schemas created via `BaseEntity` from `#lib/entity`.
-- [ ] All Entity IDs use `UUIDField` (UUIDv7).
-- [ ] Entity classes are pure data classes implementing schema `z.infer` types without business methods.
-- [ ] Repository interfaces extend `BaseRepository<T, Create, Update>`.
-- [ ] Use Case context types and type aliases defined in `src/applications/*.usecase.ts`.
-
-### 2. `packages/database`
-- [ ] Depends only on `domains`.
-- [ ] Table schemas use `primaryKeyUuid7('id')`, `createdAtTimestamp('created_at')`, `updatedAtTimestamp('updated_at')`.
-- [ ] All foreign key columns have indexes defined in the 2nd argument of `pgTable`.
-- [ ] All table relations defined in centralized `src/relations.ts` via `defineRelationsPart`.
-- [ ] Generic `Repository<T, C, U>` extends `BaseRepository` and uses `this.db` and `this.table`.
-
-### 3. `packages/applications`
-- [ ] Depends only on `domains`.
-- [ ] Every usecase class implements its contract interface from `domains` (e.g. `ICreateProductUseCase`).
-- [ ] Input payload validated using `await schema.safeParseAsync(context.data)`.
-- [ ] Errors thrown using typed subclasses from `#lib/error` (`NotFoundError`, `ValidationError`, `DuplicateError`).
-- [ ] Repositories injected via constructor with interface type (no concrete repo `new Repository()` inside use case).
-
-### 4. `packages/infrastructures`
-- [ ] Depends on `domains` and `database` only (never `applications`).
-- [ ] Concrete repositories extend `Repository<T, C, U>` and call `super(db, table)`.
-- [ ] Base CRUD methods (`create`, `findById`, `findAll`, `update`, `delete`) are inherited — NOT re-implemented.
-- [ ] Password hashing uses `argon2` via `#lib/password`.
-
-### 5. `packages/client`
-- [ ] Models in `spec/models/<module>.tsp` alias generated entities (`model User is Domain.Entity.User;`).
-- [ ] Create DTOs use `OmitProperties<Model, "id" | "createdAt" | "updatedAt">`.
-- [ ] Update DTOs use `OptionalProperties<OmitProperties<...>>`.
-- [ ] Service interfaces define explicit response unions (`ApiOkResponse<T> | ApiNotFoundResponse | ApiBadRequestResponse`).
-
-### 6. `packages/ui` & `apps/web`
-- [ ] `packages/ui` contains only dumb UI primitives (zero business logic, no form orchestration).
-- [ ] `apps/web` controllers extend base `Controller` and use `this.validator()` and `this.success()`.
-- [ ] Endpoints grouped by domain module according to the **Ponytail Principle**.
+Run appropriate type/lint checks and record warnings as well as exit codes. For runtime changes choose focused cases: two tenants, inactive members, disabled features, invalid transitions, duplicate writes, concurrent revisions, and partial-write rollback. A static pass does not establish database isolation or browser behavior. For documentation-only changes validate links, metadata, and consistency instead of executing unrelated application tests.

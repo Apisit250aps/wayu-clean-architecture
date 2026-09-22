@@ -38,6 +38,19 @@ npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0 --skill clean-archite
 npx skills add Apisit250aps/wayu-clean-architecture -g
 ```
 
+### Upgrading from v0.5.0
+
+Version 1.0.0 consolidates 12 skills into 7. Update explicit skill invocations and local references using this mapping, then reinstall the selected skills. Review and remove obsolete local copies so agents do not load conflicting instructions.
+
+| Previous skills | Replacement |
+| :--- | :--- |
+| `clean-architecture-setup`, `clean-architecture-monorepo`, `clean-architecture-format` | `clean-architecture-foundation` |
+| `clean-architecture-domain`, `clean-architecture-application` | `clean-architecture-core` |
+| `clean-architecture-database-drizzle`, `clean-architecture-infrastructure` | `clean-architecture-persistence` |
+| `clean-architecture-presentation`, `clean-architecture-typespec` | `clean-architecture-api` |
+
+`clean-architecture-feature`, `clean-architecture-frontend`, and `clean-architecture-validator` retain their names with updated guidance. See [release notes](CHANGELOG.md) for behavioral changes.
+
 ---
 
 ## 🛠️ Available Skills
@@ -46,10 +59,10 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 | :--- | :--- | :--- | :--- |
 | **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Feature Orchestrator**: Routes an end-to-end feature through only its affected layers. | Core → Persistence → API → Frontend → audit. |
 | **`clean-architecture-foundation`** | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions. | Turborepo setup, package presets, Prettier, and dependency boundaries. |
-| **`clean-architecture-core`** | `🏷️ Backend` | Define business language and application workflows. | Zod schemas, entities, ports, use cases, `safeParseAsync`, typed errors. |
+| **`clean-architecture-core`** | `🏷️ Backend` | Design modular Domain and Application workflows for configurable tenant systems. | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency. |
 | **`clean-architecture-persistence`** | `🏷️ Backend` | Implement concrete storage and repository adapters. | Drizzle schemas, migrations, relations, generic repositories, and infrastructure. |
 | **`clean-architecture-api`** | `🏷️ Both (Fullstack)` | Deliver HTTP contracts and handlers. | TypeSpec, OpenAPI, generated client SDKs, controller validation, and error mapping. |
-| **`clean-architecture-frontend`** | `🏷️ Frontend` | Frontend architecture: Separation of Design System (`packages/ui`) vs Combined Components (`apps/web`). | Primitives vs Compound UI, react-hook-form, TanStack Table, Client SDK. |
+| **`clean-architecture-frontend`** | `🏷️ Frontend` | Build feature-oriented Next.js UI with reusable `@repo/ui` components and generated API contracts. | React Hook Form Controllers, React Query hooks, React Aria, shadcn, and TypeSpec client boundaries. |
 | **`clean-architecture-validator`** | `🏷️ Both (Fullstack)` | 🛡️ **AI Auditor**: Audit codebase for Clean Architecture violations. | Detect layer leaks, illegal `any`/`@ts-ignore`, bypassed use cases, synchronous `.parse()`. |
 
 ---
@@ -104,7 +117,9 @@ wayu-clean-architecture/
     │   ├── SKILL.md
     │   └── references/
     │       ├── domain-patterns.md
-    │       └── usecase-patterns.md
+    │       ├── usecase-patterns.md
+    │       ├── tenant-policy-design.md
+    │       └── source-analysis.md
     ├── clean-architecture-persistence/
     │   ├── SKILL.md
     │   └── references/
@@ -116,7 +131,9 @@ wayu-clean-architecture/
     │       ├── presentation-patterns.md
     │       └── typespec-patterns.md
     ├── clean-architecture-frontend/
-    │   └── SKILL.md
+    │   ├── SKILL.md
+    │   └── references/
+    │       └── frontend-patterns.md
     └── clean-architecture-validator/
         ├── SKILL.md
         └── references/
