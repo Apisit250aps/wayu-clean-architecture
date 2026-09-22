@@ -21,7 +21,7 @@ npx skills add https://github.com/Apisit250aps/wayu-clean-architecture
 
 ### Install a specific skill
 ```bash
-npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-setup
+npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-foundation
 ```
 
 ### Install a specific Release / Version Tag 🏷️
@@ -30,7 +30,7 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-s
 npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0 --skill clean-architecture-monorepo
+npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -44,17 +44,12 @@ npx skills add Apisit250aps/wayu-clean-architecture -g
 
 | Skill Name | Scope / Tag | Description | Key Focus |
 | :--- | :--- | :--- | :--- |
-| **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Master Orchestrator**: End-to-end generator creating complete features/modules across ALL layers. | 7-step pipeline (Domain -> Database -> Application -> Infrastructure -> Presentation -> Verify). |
-| **`clean-architecture-monorepo`** | `🏷️ Both (Fullstack)` | 📦 **Package Initializer**: Scaffold new packages (`domains`, `database`, `applications`, `infrastructures`, etc.). | Generates `package.json` with `#imports`, `tsconfig.json`, `eslint.config.mjs` layer boundaries. |
-| **`clean-architecture-setup`** | `🏷️ Both (Fullstack)` | Initialize or scaffold Clean Architecture projects across various tech stacks. | Folder structure, DI container wiring, Prettier/ESLint, boundary configuration. |
-| **`clean-architecture-domain`** | `🏷️ Both (Shared)` | Design and implement pure Domain Layer components. | Schema-First Zod (`BaseEntity`), pure data Entities, Repository interfaces, Use Case contracts. |
-| **`clean-architecture-database-drizzle`** | `🏷️ Backend` | Scaffold, configure, and implement the Database Layer using Drizzle ORM. | Drizzle table schemas, UUIDv7 helpers, `defineRelationsPart`, Drizzle client, base `Repository<T,C,U>`. |
-| **`clean-architecture-application`**| `🏷️ Backend` | Implement Application Layer Use Cases and Business Workflows. | Use Case implementations, `safeParseAsync` validation, typed error hierarchy (`lib/error.ts`). |
-| **`clean-architecture-infrastructure`** | `🏷️ Backend` | Implement Infrastructure Layer adapters and external integrations. | Drizzle generic `Repository<T,C,U>` base (`super(db, table)`), custom queries, Argon2 auth. |
-| **`clean-architecture-presentation`**| `🏷️ Both (Shared)` | Implement Presentation Layer handlers, controllers, and APIs. | Hono REST Controllers, Ponytail grouping, input validation, structured API responses. |
-| **`clean-architecture-typespec`** | `🏷️ Both (Fullstack)` | Design TypeSpec (`.tsp`) API specs & generate TypeScript Axios/React Query Client SDKs. | Model Aliasing (`Domain.Entity`), `OmitProperties`/`OptionalProperties` DTO transforms, Hey-API. |
+| **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Feature Orchestrator**: Routes an end-to-end feature through only its affected layers. | Core → Persistence → API → Frontend → audit. |
+| **`clean-architecture-foundation`** | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions. | Turborepo setup, package presets, Prettier, and dependency boundaries. |
+| **`clean-architecture-core`** | `🏷️ Backend` | Define business language and application workflows. | Zod schemas, entities, ports, use cases, `safeParseAsync`, typed errors. |
+| **`clean-architecture-persistence`** | `🏷️ Backend` | Implement concrete storage and repository adapters. | Drizzle schemas, migrations, relations, generic repositories, and infrastructure. |
+| **`clean-architecture-api`** | `🏷️ Both (Fullstack)` | Deliver HTTP contracts and handlers. | TypeSpec, OpenAPI, generated client SDKs, controller validation, and error mapping. |
 | **`clean-architecture-frontend`** | `🏷️ Frontend` | Frontend architecture: Separation of Design System (`packages/ui`) vs Combined Components (`apps/web`). | Primitives vs Compound UI, react-hook-form, TanStack Table, Client SDK. |
-| **`clean-architecture-format`** | `🏷️ Both (Fullstack)` | Enforce naming conventions, file organization, and architectural linting rules. | File suffixes (`.entity`, `.usecase`, etc.), dependency boundary rules, ESLint / Depcruise configs. |
 | **`clean-architecture-validator`** | `🏷️ Both (Fullstack)` | 🛡️ **AI Auditor**: Audit codebase for Clean Architecture violations. | Detect layer leaks, illegal `any`/`@ts-ignore`, bypassed use cases, synchronous `.parse()`. |
 
 ---
@@ -98,45 +93,30 @@ wayu-clean-architecture/
     │   └── references/
     │       ├── feature-generation-guide.md
     │       └── end-to-end-example.md
-    ├── clean-architecture-monorepo/
-    │   ├── SKILL.md
-    │   └── references/
-    │       └── package-presets.md
-    ├── clean-architecture-setup/
+    ├── clean-architecture-foundation/
     │   ├── SKILL.md
     │   └── references/
     │       ├── architecture-overview.md
+    │       ├── naming-and-style.md
+    │       ├── package-presets.md
     │       └── starter-libraries.md
-    ├── clean-architecture-domain/
+    ├── clean-architecture-core/
     │   ├── SKILL.md
     │   └── references/
-    │       └── domain-patterns.md
-    ├── clean-architecture-database-drizzle/
-    │   ├── SKILL.md
-    │   └── references/
-    │       └── drizzle-patterns.md
-    ├── clean-architecture-application/
-    │   ├── SKILL.md
-    │   └── references/
+    │       ├── domain-patterns.md
     │       └── usecase-patterns.md
-    ├── clean-architecture-infrastructure/
+    ├── clean-architecture-persistence/
     │   ├── SKILL.md
     │   └── references/
+    │       ├── drizzle-patterns.md
     │       └── infrastructure-patterns.md
-    ├── clean-architecture-presentation/
+    ├── clean-architecture-api/
     │   ├── SKILL.md
     │   └── references/
-    │       └── presentation-patterns.md
-    ├── clean-architecture-typespec/
-    │   ├── SKILL.md
-    │   └── references/
+    │       ├── presentation-patterns.md
     │       └── typespec-patterns.md
     ├── clean-architecture-frontend/
     │   └── SKILL.md
-    ├── clean-architecture-format/
-    │   ├── SKILL.md
-    │   └── references/
-    │       └── naming-and-style.md
     └── clean-architecture-validator/
         ├── SKILL.md
         └── references/
