@@ -97,3 +97,5 @@ An effect is reserved for an external subscription or imperative browser API wit
 ## shadcn workflow
 
 Before adding a primitive, inspect existing `packages/ui/src/components`. If absent, use `$shadcn` to search a named registry, read the selected component documentation, then add and review it with the workspace package runner. Do not overwrite an existing component without an explicit user request. Preserve the workspace import aliases and React Aria/base component APIs.
+
+For query/mutation-driven components with editable input, use React Hook Form and Controller for that input. Keep fetched data and pending/error/cache state in React Query. Import shared utils/lib/helpers directly from concrete files, not barrels.

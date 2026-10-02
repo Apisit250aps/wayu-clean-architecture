@@ -282,15 +282,6 @@ type ApiResponse<T> = {
   code?: AppErrorCode;
 };
 
-const throwAppError = (error: unknown): never => {
-  if (error instanceof AppError) {
-    throw error;
-  }
-  throw new InternalError(
-    error instanceof Error ? error.message : 'Unknown error',
-  );
-};
-
 export {
   AppError,
   NotFoundError,
@@ -299,10 +290,25 @@ export {
   UnauthorizedError,
   ForbiddenError,
   DuplicateError,
-  throwAppError,
 };
 
 export type { AppErrorCode, ApiResponse };
+```
+
+Keep the standalone error helper in a separate file and import the error classes directly:
+
+```typescript
+// packages/applications/src/lib/throw-app-error.ts
+import { AppError, InternalError } from './error';
+
+export const throwAppError = (error: unknown): never => {
+  if (error instanceof AppError) {
+    throw error;
+  }
+  throw new InternalError(
+    error instanceof Error ? error.message : 'Unknown error',
+  );
+};
 ```
 
 ---

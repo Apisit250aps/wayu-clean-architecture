@@ -26,11 +26,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 
 ### Install a specific Release / Version Tag 🏷️
 ```bash
-# Install from a specific version/tag (e.g. v1.0.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0
+# Install from a specific version/tag (e.g. v2.0.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v2.0.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v1.0.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v2.0.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -49,15 +49,21 @@ Version 1.0.0 consolidates 12 skills into 7. Update explicit skill invocations a
 | `clean-architecture-database-drizzle`, `clean-architecture-infrastructure` | `clean-architecture-persistence` |
 | `clean-architecture-presentation`, `clean-architecture-typespec` | `clean-architecture-api` |
 
-`clean-architecture-feature`, `clean-architecture-frontend`, and `clean-architecture-validator` retain their names with updated guidance. See [release notes](CHANGELOG.md) for behavioral changes.
+In v1.0.0, `clean-architecture-feature`, `clean-architecture-frontend`, and `clean-architecture-validator` retained their names. For v2.0.0, also apply the migration below. See [release notes](CHANGELOG.md) for behavioral changes.
 
 ---
+
+## Upgrading from v1.0.0
+
+Version 2.0.0 replaces `clean-architecture-feature` with `clean-architecture-plan` for task planning. Implementation uses the affected Core, Persistence, API, and Frontend skills directly; cross-layer delivery review belongs to Validator. Update explicit invocations and remove obsolete installed Feature copies after reinstalling. The collection still has seven skills.
+
+Utils/lib/helpers now require concrete-file imports. Extract standalone helpers from Application/use-case and class files into their owning package; constructors, class methods, and necessary inline callbacks remain allowed. Use RHF/Controller for editable inputs in form/query/mutation-driven Web components, with React Query retaining server state.
 
 ## 🛠️ Available Skills
 
 | Skill Name | Scope / Tag | Description | Key Focus |
 | :--- | :--- | :--- | :--- |
-| **`clean-architecture-feature`** | `🏷️ Both (Fullstack)` | 🚀 **Feature Orchestrator**: Routes an end-to-end feature through only its affected layers. | Core → Persistence → API → Frontend → audit. |
+| **`clean-architecture-plan`** | `🏷️ Planning` | Create coded, layer-separated task plans. | Thai Trello README, English AI tasks, linked checklists, and reusable templates. |
 | **`clean-architecture-foundation`** | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions. | Turborepo setup, package presets, Prettier, and dependency boundaries. |
 | **`clean-architecture-core`** | `🏷️ Backend` | Design modular Domain and Application workflows for configurable tenant systems. | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency. |
 | **`clean-architecture-persistence`** | `🏷️ Backend` | Implement concrete storage and repository adapters. | Drizzle schemas, migrations, relations, generic repositories, and infrastructure. |
@@ -101,14 +107,15 @@ Version 1.0.0 consolidates 12 skills into 7. Update explicit skill invocations a
 wayu-clean-architecture/
 ├── README.md
 └── skills/
-    ├── clean-architecture-feature/
+    ├── clean-architecture-plan/
     │   ├── SKILL.md
-    │   └── references/
-    │       ├── feature-generation-guide.md
-    │       └── end-to-end-example.md
+    │   └── assets/
+    │       ├── main-task.README.md
+    │       └── task.md
     ├── clean-architecture-foundation/
     │   ├── SKILL.md
     │   └── references/
+    │       ├── end-to-end-example.md
     │       ├── architecture-overview.md
     │       ├── naming-and-style.md
     │       ├── package-presets.md
@@ -141,6 +148,12 @@ wayu-clean-architecture/
 ```
 
 ---
+
+## Task planning
+
+Use `$clean-architecture-plan` to create `plans/<task-code>-<ชื่อ main task>/README.md` with a short Thai Trello summary and linked direct-child checklist. English AI instructions live in `tasks/`; deeper subtasks are linked only from their parent task. Web, Backend (API/client/infra/domains/application), and Database (domains/database) have separate main tasks, with explicit ownership for shared domain changes. Templates are included in the skill assets.
+
+Across implementation skills, utils/lib/helpers use concrete-file imports and standalone helpers live outside use-case/class files. Web editable form/input state uses RHF/Controller; React Query owns server state.
 
 ## 🚀 How AI Agents Use These Skills
 

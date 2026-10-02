@@ -25,3 +25,7 @@ Repository/storage adapters depend on domains and database, not application impl
 - Implement tenant predicates for reads and writes, scoped uniqueness, and atomic revision conditions where the domain contract requires them. An application uniqueness/revision check alone does not prevent races.
 - Prefer bounded batch queries and projections to repeated row lookups. Validate an optimization with query counts/timings and execution plans where appropriate; do not infer speed from helper extraction or Promise.all.
 - Keep a versioned migration snapshot of changed system catalogs and explicit grants. Preserve tenant customizations and distinguish migration generation from application to a target DB.
+
+## Shared helper conventions
+
+Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

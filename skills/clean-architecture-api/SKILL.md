@@ -21,3 +21,7 @@ Search existing request validators, response/error mappers, pagination helpers, 
 Build actor/security context from authenticated middleware. Never spread request data over trusted permissions, admin status, or active tenant fields. Propagate tenant scope and revision/idempotency inputs required by the use-case contract. Expose only client-writable fields, even when the entity model has more properties.
 
 Use core constants for stable statuses/actions and preserve generated contracts through regeneration. Check representative payloads, response envelopes, error codes, pagination, and nullable/date conversions at the boundary; a shared helper must not hide a contract mismatch.
+
+## Shared helper conventions
+
+Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

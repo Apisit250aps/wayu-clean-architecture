@@ -39,6 +39,7 @@ Read [frontend patterns](references/frontend-patterns.md) when implementing a fe
 ## State, forms, and server data
 
 - Do not use `useEffect` to copy, initialize, synchronize, or derive component/form state. For forms, keep values in React Hook Form via `useForm`, `defaultValues`/`values`, `reset`, `watch`, and `Controller`.
+- In form and query/mutation-driven components, manage editable field/input state with React Hook Form and `Controller`. Keep query results, request status, and cache state in React Query; do not mirror them into form state.
 - Every reusable form field that binds a React Hook Form value must use `Controller`; consume the field's value, change handler, disabled state, and validation state inside its render function.
 - Resolve client data through feature `useQuery` hooks and writes through feature `useMutation` hooks. Define and reuse query-key factories from `shared/utils/query`; invalidate the narrow affected keys after success.
 - Put shared transformations, error-message extraction, date/path/query-key helpers, and payload mappers in `shared/utils` or feature `utils`, not inline in views.
@@ -54,3 +55,7 @@ Read [frontend patterns](references/frontend-patterns.md) when implementing a fe
 Use domain constants or generated enum types for stable business values instead of local string catalogs. Keep mutable tenant policy in query data and scope relevant cache keys by tenant. Search shared UI, field adapters, error/payload mappers, and feature hooks before adding alternatives. Measure expensive renders or large-list behavior before introducing memoization or virtualization.
 
 Run the affected workspace's type check and lint. When contracts change, regenerate the client before checking the web application. Do not claim browser behavior is verified unless the relevant route has been exercised.
+
+## Shared helper conventions
+
+Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

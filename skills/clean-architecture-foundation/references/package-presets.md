@@ -272,7 +272,8 @@ export default [
 
 ### Starter `src/index.ts`
 ```typescript
-export * from './lib/error';
+// Export domain/use-case APIs here as needed.
+// Import error classes directly from @<project>/applications/lib/error.
 ```
 
 ---

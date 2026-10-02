@@ -1,5 +1,23 @@
 # Changelog
 
+## v2.0.0
+
+Breaking release: remove `clean-architecture-feature`. Use `clean-architecture-plan` for task planning, affected layer skills for implementation, and `clean-architecture-validator` for cross-layer delivery review. Reinstall and remove obsolete Feature skill copies; update explicit invocations. The collection contains seven skills.
+
+- Move dependency routing into Plan and cross-layer delivery checks into Validator.
+- Preserve the illustrative end-to-end walkthrough under Foundation; remove the redundant Feature generation guide.
+- Centralize detailed helper conventions in Foundation with concise layer reminders and links.
+- Add `clean-architecture-plan` with Thai main-task and English AI-task templates, coded folders, parent-only nested checklists, and separate Web/Backend/Database task ownership.
+- Require concrete-file utils/lib/helper imports across layers and separate standalone helpers from Application/use-case and class files.
+- Clarify RHF/Controller editable input ownership in form/query/mutation components while keeping server state in React Query.
+- Align skill routing, audit checks, and starter examples with these rules.
+
+### Validation
+
+- All seven skills passed skill-creator validation.
+- Local Markdown links and Git whitespace checks passed.
+- Documentation/skill changes only; application runtime tests were not run.
+
 ## v1.0.0
 
 This release consolidates the skill collection and updates its Core and Frontend guidance from an evolved TypeScript monorepo. The major version reflects breaking skill names and architecture guidance; it does not certify the runtime behavior of projects using the skills.

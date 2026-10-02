@@ -61,3 +61,9 @@ Read the current core, frontend, and persistence entrypoints for ownership rules
 ## Evidence and reporting
 
 Run appropriate type/lint checks and record warnings as well as exit codes. For runtime changes choose focused cases: two tenants, inactive members, disabled features, invalid transitions, duplicate writes, concurrent revisions, and partial-write rollback. A static pass does not establish database isolation or browser behavior. For documentation-only changes validate links, metadata, and consistency instead of executing unrelated application tests.
+
+## Helper and state ownership checks
+
+- Utils/lib/helper imports resolve to concrete files or explicit subpaths in every layer; no barrel/root re-export imports.
+- Application/use-case files and class files contain no standalone helper declarations; helpers live in the owning package utils/helper/lib files. Class methods and necessary inline callbacks are allowed.
+- Editable fields in form/query/mutation-driven Web components use RHF/Controller; React Query retains server/request/cache state. Avoid useEffect for form or derived state synchronization.

@@ -2,7 +2,7 @@
 
 ## Module organization
 
-Use `src/use-cases/<module>/` for related workflow implementations and a public `index.ts`. A cohesive CRUD group can remain in one file; complex assignments, publishing, reviewing, scheduling, or attachment workflows deserve separate named files. Module-local helpers stay next to their callers until another module needs the same semantics.
+Use `src/use-cases/<module>/` for related workflow implementations and a public `index.ts`. A cohesive CRUD group can remain in one file; complex assignments, publishing, reviewing, scheduling, or attachment workflows deserve separate named files. Module-local standalone helpers live in dedicated utils/helper/lib files in the owning package, outside use-case and class files. Import them from their concrete files; never through barrels.
 
 Constructors accept domain ports, including `IUnitOfWork` when needed. Keep request actor/tenant values in execution context or local variables, never mutable fields on a singleton use case. Require dependencies that enforce invariants; an optional repository must not silently disable authorization or relationship checks.
 

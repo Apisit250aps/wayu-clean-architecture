@@ -23,7 +23,7 @@ Preserve established public imports while organizing related behavior into modul
 `repositories/<module>`, `applications/<module>`, and
 `use-cases/<module>`. Small modules may retain one file per category.
 Split a growing module by aggregate or workflow, not by arbitrary line counts.
-Update package exports, barrels, and entity-generation discovery when moving files.
+Update package exports, permitted domain/entity/constants barrels, and entity-generation discovery when moving files. Expose utils/lib/helpers through concrete subpaths rather than barrels.
 
 Keep invariants explicit and vary genuine policy through typed configuration or injected strategies. Tenant IDs, role names, and customer-specific branches must not control business behavior. Do not introduce a generic rules engine or plugin registry until an actual extension point requires one.
 
@@ -43,3 +43,7 @@ versioned migrations; never automatically grant new actions to every role.
 Search `domains/src/lib`, `applications/src/lib`, decorators, and module-local helpers before writing a new abstraction. Share pure business calculations in Domain, application orchestration helpers in Application, and DB mechanics in persistence. Keep shared functions typed, cohesive, and explicit about scope and dependencies.
 
 Validate with the repository's type-check/lint commands. For runtime changes, select checks for tenant A/B separation, constants/catalog integrity, policy behavior, rollback, and concurrent updates as relevant. Report static checks separately from real API/database verification. Do not apply migrations merely to inspect a design.
+
+## Shared helper conventions
+
+Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

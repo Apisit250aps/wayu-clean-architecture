@@ -1,6 +1,6 @@
 # End-to-End Real World Feature Example (`Product` Module)
 
-This complete walkthrough demonstrates how a new `Product` module is created across all Clean Architecture layers.
+This illustrative walkthrough shows the wiring of a `Product` module across layers. Use only when comparable wiring is helpful; the current layer skills take precedence. Adapt API location and package ownership to the target repository. This example is not a tenant/security or runtime-verification checklist.
 
 ---
 

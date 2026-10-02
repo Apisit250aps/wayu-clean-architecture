@@ -27,7 +27,9 @@ When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find 
 7. **Frontend Boundary Leaks**: `packages/ui` importing business-specific hooks, generated services, or backend packages. Domain-neutral RHF fields, tables, and overlays are permitted.
 8. **Missing Module Constants**: New modules/tables without owning constants, explicit aggregate permission mapping, or affected feature/action/default-grant catalog updates.
 9. **Tenant and Workflow Gaps**: Caller-controlled security attributes, unscoped resource access, cross-tenant references, optional dependencies that skip invariants, and revision checks without atomic persistence enforcement.
-10. **Duplicated or Inefficient Patterns**: Copied parsing/guards/mappers, oversized shared helper interfaces, N+1 queries, unbounded lists, and unsupported performance claims.
+10. **Helper Import/File Violations**: Utils/lib/helpers imported through barrels or root re-exports; standalone helper functions in Application/use-case or class files. Class methods and necessary inline callbacks remain permitted.
+11. **Form State Ownership**: Editable inputs in form/query/mutation components bypass RHF/Controller, or query/request state is mirrored into form/local state through effects.
+12. **Duplicated or Inefficient Patterns**: Copied parsing/guards/mappers, oversized shared helper interfaces, N+1 queries, unbounded lists, and unsupported performance claims.
 
 ---
 
@@ -108,3 +110,10 @@ When reporting audit findings to the user, format the output as follows:
 ## 📚 Further Reference
 
 - [validation-checklist.md](references/validation-checklist.md): Comprehensive checklist and red flags for Clean Architecture monorepos.
+
+## Cross-layer delivery review
+
+- Search owning-layer shared code and sibling implementations before adding helpers or components; compare semantics as well as syntax.
+- Verify owning constants and aggregate permission mapping for new modules/tables, and affected action/default-grant catalogs and seed migrations.
+- Trace trusted tenant scope, lifecycle policy, and concurrency requirements through core, repository predicates, API contracts, and frontend query keys.
+- Verify affected boundaries and report static findings, exercised runtime behavior, and performance evidence separately. Helper extraction alone does not establish faster execution.

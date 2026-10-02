@@ -22,3 +22,11 @@ Keep dependencies inward: domains has no internal dependency; database and appli
 Inspect current manifests, aliases, shared configs, constants, and helper libraries before scaffolding copies. Include domain constants and module-level exports in presets for new capabilities. Preserve public import paths when splitting large modules and verify entity/client generators still discover the moved files.
 
 Shared libraries follow ownership, not a blanket ban on composition: domain-neutral RHF fields, tables, and overlays belong in UI; tenant/business orchestration belongs in Web or Application. The current core/frontend skills govern new work if an older starter example is more restrictive. A composition root may wire Application implementations to infrastructure adapters; keep that wiring isolated from the inner core and browser bundles.
+
+## Helper files and imports
+
+In every layer, import utils, lib, and helper symbols directly from their concrete file or explicit package subpath. Never import them through an `index.ts` barrel, an aggregate re-export, or a package root that re-exports them. Package export maps may expose concrete subpaths; unrelated domain/entity/constants barrels remain governed by the existing architecture.
+
+Keep standalone function declarations and helper arrow functions out of Application/use-case files and any file defining a class. Extract them into cohesive utils/helper/lib files owned by the same package and import them directly. Class constructors and methods remain in their class; this rule does not prohibit method bodies or necessary inline callbacks.
+
+For an illustrative multi-layer wiring example, read [the Product walkthrough](references/end-to-end-example.md) only when useful. Apply the current layer skills over older example patterns.
