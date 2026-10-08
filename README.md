@@ -26,11 +26,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 
 ### Install a specific Release / Version Tag 🏷️
 ```bash
-# Install from a specific version/tag (e.g. v2.1.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v2.1.0
+# Install from a specific version/tag (e.g. v2.2.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v2.2.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v2.1.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v2.2.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -171,7 +171,7 @@ Across implementation skills, utils/lib/helpers use concrete-file imports and st
 
 Each skill includes `SKILL.md` for its working instructions and `agents/openai.yaml` for Codex UI metadata (`display_name`, `short_description`, and `default_prompt`). Supporting references and assets remain specific to each skill.
 
-Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Every flow includes a decision flowchart, API sequence diagram, ordered calls with input/output dependencies, examples, and supported recovery paths. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
+Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Diagrams use English; headings and explanatory prose use the selected language. Each flow separates its flowchart, step/decision explanation, sequence diagram, and API ordering explanation into readable sections. API examples show request bodies, HTTP statuses, responses, and next client actions for each source-supported integration case. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
 
 Example: `ใช้ $clean-architecture-docs สร้างเอกสารส่งต่อ feature การลา แล้วถาม platform และภาษาก่อน`
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.2.0
+
+Improve `clean-architecture-docs` handoffs with clearer diagrams and case-specific API examples.
+
+- Keep diagram labels, participants, messages, notes, and branch conditions in English while headings and explanatory prose follow the selected language.
+- Separate flowcharts, flow explanations, sequence diagrams, and API ordering explanations into readable sections.
+- Require request bodies, HTTP statuses, response examples, and next client actions for each source-supported integration case.
+- Handle shared requests, bodyless requests, multipart uploads, empty responses, and unknown contract shapes explicitly.
+- Align the handoff template, delivery checks, and README with these requirements.
+
+### Validation
+
+- All eight skills passed skill-creator validation.
+- YAML metadata and Git whitespace checks passed.
+- Skill/documentation changes only; interactive end-to-end execution was not performed.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v2.2.0
+```
+
 ## v2.1.0
 
 The collection now contains eight skills. Existing skill names and working instructions remain compatible.
