@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture API"
+  short_description: "Define API contracts, HTTP handlers, and client SDKs"
+  default_prompt: "Use $clean-architecture-api to deliver the requested API contracts, HTTP handlers, and generated client changes."

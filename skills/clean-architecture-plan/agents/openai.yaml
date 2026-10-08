@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture Task Planning"
+  short_description: "Create linked task plans with separate delivery layers"
+  default_prompt: "Use $clean-architecture-plan to create a dependency-ordered task plan with Thai summaries and English task instructions, separating affected delivery layers."

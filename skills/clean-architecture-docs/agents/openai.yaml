@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Flow Handoff Docs"
+  short_description: "Document client flows and API sequences for handoff"
+  default_prompt: "Use $clean-architecture-docs to create feature handoff docs; ask me for the target platform, language, and feature scope first."

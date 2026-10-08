@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture Validator"
+  short_description: "Audit architecture boundaries and code conventions"
+  default_prompt: "Use $clean-architecture-validator to audit the requested code for architecture and convention violations, reporting findings with source references."

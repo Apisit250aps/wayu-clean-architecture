@@ -26,11 +26,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 
 ### Install a specific Release / Version Tag 🏷️
 ```bash
-# Install from a specific version/tag (e.g. v2.0.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v2.0.0
+# Install from a specific version/tag (e.g. v2.1.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v2.1.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v2.0.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v2.1.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -64,6 +64,7 @@ Utils/lib/helpers now require concrete-file imports. Extract standalone helpers 
 | Skill Name | Scope / Tag | Description | Key Focus |
 | :--- | :--- | :--- | :--- |
 | **`clean-architecture-plan`** | `🏷️ Planning` | Create coded, layer-separated task plans. | Thai Trello README, English AI tasks, linked checklists, and reusable templates. |
+| **`clean-architecture-docs`** | `🏷️ Handoff Docs` | Create feature and flow docs for Mobile or Web teams. | Interactive platform/language selection, decision flowcharts, ordered APIs, and sequence diagrams backed by source. |
 | **`clean-architecture-foundation`** | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions. | Turborepo setup, package presets, Prettier, and dependency boundaries. |
 | **`clean-architecture-core`** | `🏷️ Backend` | Design modular Domain and Application workflows for configurable tenant systems. | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency. |
 | **`clean-architecture-persistence`** | `🏷️ Backend` | Implement concrete storage and repository adapters. | Drizzle schemas, migrations, relations, generic repositories, and infrastructure. |
@@ -107,13 +108,19 @@ Utils/lib/helpers now require concrete-file imports. Extract standalone helpers 
 wayu-clean-architecture/
 ├── README.md
 └── skills/
+    ├── clean-architecture-docs/
+    │   ├── SKILL.md
+    │   ├── agents/openai.yaml
+    │   └── assets/handoff.md
     ├── clean-architecture-plan/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── assets/
     │       ├── main-task.README.md
     │       └── task.md
     ├── clean-architecture-foundation/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── references/
     │       ├── end-to-end-example.md
     │       ├── architecture-overview.md
@@ -122,6 +129,7 @@ wayu-clean-architecture/
     │       └── starter-libraries.md
     ├── clean-architecture-core/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── references/
     │       ├── domain-patterns.md
     │       ├── usecase-patterns.md
@@ -129,20 +137,24 @@ wayu-clean-architecture/
     │       └── source-analysis.md
     ├── clean-architecture-persistence/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── references/
     │       ├── drizzle-patterns.md
     │       └── infrastructure-patterns.md
     ├── clean-architecture-api/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── references/
     │       ├── presentation-patterns.md
     │       └── typespec-patterns.md
     ├── clean-architecture-frontend/
     │   ├── SKILL.md
+    │   ├── agents/openai.yaml
     │   └── references/
     │       └── frontend-patterns.md
     └── clean-architecture-validator/
         ├── SKILL.md
+        ├── agents/openai.yaml
         └── references/
             └── validation-checklist.md
 ```
@@ -156,6 +168,12 @@ Use `$clean-architecture-plan` to create `plans/<task-code>-<ชื่อ main t
 Across implementation skills, utils/lib/helpers use concrete-file imports and standalone helpers live outside use-case/class files. Web editable form/input state uses RHF/Controller; React Query owns server state.
 
 ## 🚀 How AI Agents Use These Skills
+
+Each skill includes `SKILL.md` for its working instructions and `agents/openai.yaml` for Codex UI metadata (`display_name`, `short_description`, and `default_prompt`). Supporting references and assets remain specific to each skill.
+
+Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Every flow includes a decision flowchart, API sequence diagram, ordered calls with input/output dependencies, examples, and supported recovery paths. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
+
+Example: `ใช้ $clean-architecture-docs สร้างเอกสารส่งต่อ feature การลา แล้วถาม platform และภาษาก่อน`
 
 1. **Progressive Loading**: AI agents initially read only the frontmatter `name` and `description`.
 2. **Context Activation**: When you ask your agent to *"Create a new Use Case for user registration"* or *"Review my repository for layer leaks"*, the agent automatically loads the corresponding `SKILL.md` and referenced guidelines.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture Persistence"
+  short_description: "Implement Drizzle schemas, migrations, and repositories"
+  default_prompt: "Use $clean-architecture-persistence to implement the requested persistence changes using existing schema and repository patterns."

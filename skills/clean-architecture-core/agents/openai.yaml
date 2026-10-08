@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture Core"
+  short_description: "Design domain contracts and application workflows"
+  default_prompt: "Use $clean-architecture-core to design or implement domain contracts and application workflows for the requested feature."

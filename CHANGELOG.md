@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.1.0
+
+The collection now contains eight skills. Existing skill names and working instructions remain compatible.
+
+- Add `clean-architecture-docs` for source-backed feature and flow handoff documentation for Mobile and Web teams.
+- Ask interactively for platform, document language, and feature/flow scope before drafting.
+- Include decision flowcharts, API sequence diagrams, ordered calls with value dependencies, contract examples, and supported recovery paths in each documented flow.
+- Add a reusable handoff Markdown template and distinguish source inspection, proposed behavior, and runtime verification.
+- Add consistent `agents/openai.yaml` UI metadata to all eight skills, including display names, short descriptions, and skill-specific default prompts.
+- Update the skill catalog and repository structure in README.
+
+### Validation
+
+- All eight skills passed skill-creator validation and YAML metadata checks.
+- Git whitespace checks passed.
+- Skill/documentation changes only; application runtime tests and interactive end-to-end skill execution were not run.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v2.1.0
+```
+
 ## v2.0.0
 
 Breaking release: remove `clean-architecture-feature`. Use `clean-architecture-plan` for task planning, affected layer skills for implementation, and `clean-architecture-validator` for cross-layer delivery review. Reinstall and remove obsolete Feature skill copies; update explicit invocations. The collection contains seven skills.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Architecture Foundation"
+  short_description: "Set up workspaces, packages, and dependency boundaries"
+  default_prompt: "Use $clean-architecture-foundation to set up or extend the workspace using its existing conventions and package boundaries."
