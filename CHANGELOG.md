@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.3.0
+
+Extend `clean-architecture-docs` with Thai JSDoc guidance alongside existing feature and flow handoffs.
+
+- Add a Thai JSDoc reference covering responsibilities, inputs, outputs, business rules, errors, and examples for classes, use cases, repositories, functions, types, and constants.
+- Route code documentation requests directly to the JSDoc workflow without Mobile/Web intake or handoff diagrams.
+- Require comments to match actual source and callers, including nullable results, side effects, tenant scope, and transaction guarantees when relevant.
+- Update skill discovery metadata and README examples while preserving the handoff workflow.
+
+### Validation
+
+- All eight skills passed skill-creator validation.
+- YAML metadata, local Markdown links, code fences, and Git whitespace checks passed.
+- Documentation/skill changes only; application runtime tests and interactive end-to-end skill execution were not run.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v2.3.0
+```
+
 ## v2.2.0
 
 Improve `clean-architecture-docs` handoffs with clearer diagrams and case-specific API examples.

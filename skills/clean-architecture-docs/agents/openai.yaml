@@ -1,4 +1,4 @@
 interface:
-  display_name: "Feature Flow Handoff Docs"
-  short_description: "Document client flows and API sequences for handoff"
-  default_prompt: "Use $clean-architecture-docs to create feature handoff docs; ask me for the target platform, language, and feature scope first."
+  display_name: "JSDoc & Feature Handoff Docs"
+  short_description: "Write Thai JSDoc or document client flows and APIs"
+  default_prompt: "Use $clean-architecture-docs to write Thai JSDoc from source or create feature handoff docs; for handoffs, ask for missing platform, language, and feature scope first."

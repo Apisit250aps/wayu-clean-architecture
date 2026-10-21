@@ -26,11 +26,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 
 ### Install a specific Release / Version Tag 🏷️
 ```bash
-# Install from a specific version/tag (e.g. v2.2.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v2.2.0
+# Install from a specific version/tag (e.g. v2.3.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v2.3.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v2.2.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v2.3.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -64,7 +64,7 @@ Utils/lib/helpers now require concrete-file imports. Extract standalone helpers 
 | Skill Name | Scope / Tag | Description | Key Focus |
 | :--- | :--- | :--- | :--- |
 | **`clean-architecture-plan`** | `🏷️ Planning` | Create coded, layer-separated task plans. | Thai Trello README, English AI tasks, linked checklists, and reusable templates. |
-| **`clean-architecture-docs`** | `🏷️ Handoff Docs` | Create feature and flow docs for Mobile or Web teams. | Interactive platform/language selection, decision flowcharts, ordered APIs, and sequence diagrams backed by source. |
+| **`clean-architecture-docs`** | `🏷️ Documentation` | Write Thai JSDoc or create feature and flow docs for Mobile or Web teams. | Source-backed code contracts, JSDoc examples, interactive handoff intake, and API diagrams. |
 | **`clean-architecture-foundation`** | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions. | Turborepo setup, package presets, Prettier, and dependency boundaries. |
 | **`clean-architecture-core`** | `🏷️ Backend` | Design modular Domain and Application workflows for configurable tenant systems. | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency. |
 | **`clean-architecture-persistence`** | `🏷️ Backend` | Implement concrete storage and repository adapters. | Drizzle schemas, migrations, relations, generic repositories, and infrastructure. |
@@ -111,7 +111,8 @@ wayu-clean-architecture/
     ├── clean-architecture-docs/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
-    │   └── assets/handoff.md
+    │   ├── assets/handoff.md
+    │   └── references/jsdoc.md
     ├── clean-architecture-plan/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
@@ -172,6 +173,10 @@ Across implementation skills, utils/lib/helpers use concrete-file imports and st
 Each skill includes `SKILL.md` for its working instructions and `agents/openai.yaml` for Codex UI metadata (`display_name`, `short_description`, and `default_prompt`). Supporting references and assets remain specific to each skill.
 
 Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Diagrams use English; headings and explanatory prose use the selected language. Each flow separates its flowchart, step/decision explanation, sequence diagram, and API ordering explanation into readable sections. API examples show request bodies, HTTP statuses, responses, and next client actions for each source-supported integration case. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
+
+For code documentation, the same skill uses [the Thai JSDoc guide](skills/clean-architecture-docs/references/jsdoc.md) to explain responsibilities, inputs, outputs, business rules, and errors from actual source. JSDoc requests do not require platform selection or handoff diagrams.
+
+Example: `ใช้ $clean-architecture-docs เพิ่ม JSDoc ภาษาไทยให้ UseCase และ Repository ของ feature ผู้ใช้ โดยอธิบายเงื่อนไข ผลลัพธ์ และข้อผิดพลาดตามโค้ดจริง`
 
 Example: `ใช้ $clean-architecture-docs สร้างเอกสารส่งต่อ feature การลา แล้วถาม platform และภาษาก่อน`
 
