@@ -56,6 +56,10 @@ Use domain constants or generated enum types for stable business values instead 
 
 Run the affected workspace's type check and lint. When contracts change, regenerate the client before checking the web application. Do not claim browser behavior is verified unless the relevant route has been exercised.
 
+## Dates and time zones
+
+Show every date through the central UI formatter and its `DATE_FORMATS` presets (`{ ...DATE_FORMATS.time, timeZone }`); do not call `Intl.DateTimeFormat`, `toLocale*String`, or date-fns display formatters in features, and do not add inline option literals. Do date math with `date-fns`/`@date-fns/tz` directly, never by cutting date strings. A site's or assignment's own zone overrides the display zone. Do not claim dates are unchanged without a browser check or recorded-output tests. See [time handling](../clean-architecture-foundation/references/time-handling.md).
+
 ## Conditions and JSDoc
 
 Add Thai JSDoc for every condition written or changed, including guards, rendering/branch expressions, defaults, validation, and callback predicates; follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions). Do not change behavior solely to attach a comment.

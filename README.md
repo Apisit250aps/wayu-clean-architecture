@@ -29,11 +29,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 ### Install a specific Release / Version Tag 🏷️
 
 ```bash
-# Install from a specific version/tag (e.g. v3.0.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0
+# Install from a specific version/tag (e.g. v3.0.1)
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -75,13 +75,19 @@ Install all eight skills from the release in each scope you use:
 
 ```bash
 # Global Codex skills
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0 --skill '*' --agent codex --global --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --global --yes
 
 # Project Codex skills: run from the project's root
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --yes
 ```
 
 Review local skill customizations before updating; do not delete unrelated skills or legacy entries solely as part of this release.
+
+## Time handling
+
+Version 3.0.1 includes the time-handling guidance omitted from the v3.0.0 publication. Use native `Date` values with direct package imports from `date-fns`/`@date-fns/tz`; no Temporal, shared `lib/time` wrapper, or clock port. A use case reads `now` once and passes required `now`/`asOf`/`timeZone` values and computed cutoffs into Domain logic and owner repositories. Audit stamps and column defaults retain their documented exception.
+
+Web/UI display formatting uses central presets; calendar math and SQL conversions preserve explicit zone semantics. Read [time handling](skills/clean-architecture-foundation/references/time-handling.md) for conversion, DST, lint, and verification requirements. This patch completes the intended guidance bundle; existing projects still need an explicit implementation migration.
 
 ## 🛠️ Available Skills
 
@@ -152,7 +158,8 @@ wayu-clean-architecture/
     │       ├── architecture-overview.md
     │       ├── naming-and-style.md
     │       ├── package-presets.md
-    │       └── starter-libraries.md
+    │       ├── starter-libraries.md
+    │       └── time-handling.md
     ├── clean-architecture-core/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
@@ -166,7 +173,8 @@ wayu-clean-architecture/
     │   ├── agents/openai.yaml
     │   └── references/
     │       ├── drizzle-patterns.md
-    │       └── infrastructure-patterns.md
+    │       ├── infrastructure-patterns.md
+    │       └── repository-boundaries.md
     ├── clean-architecture-api/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml

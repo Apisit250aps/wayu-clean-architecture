@@ -32,6 +32,10 @@ When writing or changing conditions, add Thai JSDoc for every form using [the co
 - Prefer bounded batch queries and projections to repeated row lookups. Validate an optimization with query counts/timings and execution plans where appropriate; do not infer speed from helper extraction or Promise.all.
 - Keep a versioned migration snapshot of changed system catalogs and explicit grants. Preserve tenant customizations and distinguish migration generation from application to a target DB.
 
+## Time
+
+Repositories never read the clock: no `now()`, `clock_timestamp()`, `statement_timestamp()`, `Date.now()`, or `new Date()` comparisons in queries. Take `now`/`asOf` and computed boundaries as required parameters from the use case. Per-row date-to-instant SQL may stay in SQL, but the zone is a bound parameter (`at time zone ${timeZone}`), never a literal. Audit stamps on write and column defaults are exempt. See [time handling](../clean-architecture-foundation/references/time-handling.md).
+
 ## Shared helper conventions
 
 Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

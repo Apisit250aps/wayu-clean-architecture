@@ -86,6 +86,16 @@ Use [the full condition guide](../../clean-architecture-docs/references/jsdoc.md
 
 Run appropriate type/lint checks and record warnings as well as exit codes. For runtime changes choose focused cases: two tenants, inactive members, disabled features, invalid transitions, duplicate writes, concurrent revisions, and partial-write rollback. A static pass does not establish database isolation or browser behavior. For documentation-only changes validate links, metadata, and consistency instead of executing unrelated application tests.
 
+## Time handling checks
+
+- No Temporal, no shared date wrapper or domain `lib/time`; packages import `date-fns`/`@date-fns/tz` directly and declare them.
+- Repositories contain no clock reads (`now()`, `clock_timestamp()`, `Date.now()`, `new Date()` comparisons) and no `at time zone '<literal>'`; `now`/`asOf`/`timeZone` arrive as required port parameters. Audit stamps and column defaults are exempt.
+- Use cases read `new Date()` once and pass it down; no clock port.
+- No `split`/`slice` on date strings; calendar dates validated with `z.iso.date()` or a parse round trip.
+- Dates shown to users go through the central formatter presets; no `Intl.DateTimeFormat`/`toLocale*String` in features.
+- Date-sensitive tests assert instants and run under a second host zone; a changed SQL zone parameter has a non-default-zone test.
+- Lint rules guarding these (see [time handling](../../clean-architecture-foundation/references/time-handling.md#enforcing-with-lint)) exist and fail on a probe line.
+
 ## Helper and state ownership checks
 
 - Utils/lib/helper imports resolve to concrete files or explicit subpaths in every layer; no barrel/root re-export imports.

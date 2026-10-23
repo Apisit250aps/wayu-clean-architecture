@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.0.1
+
+Complete the v3.0.0 guidance bundle by publishing the pending time-handling changes that were omitted from that release. Repository ownership and condition JSDoc rules remain in effect.
+
+- Include the shared time reference and route Foundation, Core, Persistence, Frontend, and Validator to it.
+- Use native `Date`, direct `date-fns`/`@date-fns/tz` imports, and explicit zone-free date/time strings; remove shared date wrappers, Temporal, and clock ports from the prescribed architecture.
+- Sample `now` once per use-case execution and pass required time inputs/computed cutoffs into Domain calculations and repositories. Preserve audit/default timestamp exceptions and document synchronized-host-clock requirements.
+- Require parameterized SQL time zones, central Web/UI display presets, second-host-zone tests, and non-default-zone SQL verification.
+- Align Validator's allowed pure Domain dependencies with date-fns, clarify that construction from an explicit Date input is not a clock read, and avoid one-hour assumptions for DST transitions.
+- Preserve existing working trees when comparing tests with a baseline.
+
+### Validation
+
+- All eight skills passed skill-creator validation; YAML metadata, concrete local Markdown links/anchors, code fences, formatting, and Git whitespace checks passed.
+- Documentation/skill changes only; application runtime tests and interactive end-to-end skill execution were not run.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --global --yes
+```
+
 ## v3.0.0
 
 Breaking architecture guidance: enforce repository ownership through both direct and indirect data access. All eight skill names remain unchanged.

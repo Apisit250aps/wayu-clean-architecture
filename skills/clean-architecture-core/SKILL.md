@@ -50,6 +50,10 @@ Search `domains/src/lib`, `applications/src/lib`, decorators, and module-local h
 
 Validate with the repository's type-check/lint commands. For runtime changes, select checks for tenant A/B separation, constants/catalog integrity, policy behavior, rollback, and concurrent updates as relevant. Report static checks separately from real API/database verification. Do not apply migrations merely to inspect a design.
 
+## Time
+
+Domain calculations take `now`, `asOf`, and `timeZone` as arguments and call `date-fns`/`@date-fns/tz` directly; no `lib/time` wrapper, Temporal, or clock port. A use case reads `new Date()` once per execution and passes it to calculations and repository ports (required parameters, no database-clock defaults); it also computes arithmetic such as lease expiry. Business defaults like `DEFAULT_TIME_ZONE` are constants. See [time handling](../clean-architecture-foundation/references/time-handling.md).
+
 ## Shared helper conventions
 
 Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

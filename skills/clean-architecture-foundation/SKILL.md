@@ -12,6 +12,7 @@ Use this skill when creating a workspace, adding a package, or changing shared T
 - **Workspace setup:** establish the root layout, shared tooling, and dependency direction. Read [architecture overview](references/architecture-overview.md) first; read [starter libraries](references/starter-libraries.md) only when installing those implementations.
 - **Package setup:** add or repair one package's manifest, exports/imports, TypeScript config, ESLint rules, and starter layout. Read [package presets](references/package-presets.md).
 - **Conventions:** change names, Prettier, or boundary enforcement. Read [naming and style](references/naming-and-style.md).
+- **Time:** add date/time/time-zone handling, a date formatter, or its lint rules. Read [time handling](references/time-handling.md).
 
 ## Invariants
 
@@ -34,5 +35,9 @@ Shared libraries follow ownership, not a blanket ban on composition: domain-neut
 In every layer, import utils, lib, and helper symbols directly from their concrete file or explicit package subpath. Never import them through an `index.ts` barrel, an aggregate re-export, or a package root that re-exports them. Package export maps may expose concrete subpaths; unrelated domain/entity/constants barrels remain governed by the existing architecture.
 
 Keep standalone function declarations and helper arrow functions out of Application/use-case files and any file defining a class. Extract them into cohesive utils/helper/lib files owned by the same package and import them directly. Class constructors and methods remain in their class; this rule does not prohibit method bodies or necessary inline callbacks.
+
+## Time
+
+Dates use the native `Date` with `date-fns`/`@date-fns/tz` imported directly by each package; there is no shared date wrapper, no Temporal, and no clock port. Use cases read `new Date()` once and pass `now`/`timeZone` into pure logic and repositories; repositories never read the clock. Display formatting is Web/UI-only through one central formatter. Read [time handling](references/time-handling.md) for recipes and lint rules.
 
 For an illustrative multi-layer wiring example, read [the Product walkthrough](references/end-to-end-example.md) only when useful. Apply the current layer skills over older example patterns.
