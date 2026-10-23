@@ -57,6 +57,7 @@ const methods = useForm<FormValues>({
     <Field data-invalid={fieldState.invalid} data-disabled={field.disabled}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Input {...field} id={id} aria-invalid={fieldState.invalid} />
+      {/** แสดง error ที่มีอยู่; เมื่อไม่มี error ส่ง undefined ให้ FieldError ตาม contract ของ component */}
       <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
     </Field>
   )}
@@ -69,22 +70,7 @@ Use React Aria controls and the repository's `Field` primitives for accessible l
 
 Web providers configure the generated client once, including the relative API base URL and error mode. A feature query consumes a generated service and its abort `signal`; it has a stable query key from `shared/utils/query`.
 
-```tsx
-export function useOrganizationQuery(organizationId: string) {
-  return useQuery({
-    queryKey: organizationKeys.detail(organizationId),
-    enabled: Boolean(organizationId),
-    queryFn: async ({ signal }) => {
-      const response = await organizationServicesGetOrganization({
-        path: { id: organizationId },
-        signal,
-      });
-      if (response.data) return response.data.data;
-      throw new Error('Organization response contains no data');
-    },
-  });
-}
-```
+Query hooks use the existing generated service/result convention and shared error mapper. Preserve response envelopes and cancellation; do not replace typed failures with a generic error or infer absence from truthiness. Enable queries only when their required scoped inputs are available.
 
 Mutations own transport calls, toast/error mapping, and targeted invalidation. Keep component handlers declarative: validate with `handleSubmit`, call `mutate`, and navigate or render feedback through callbacks. Do not use component-level `try`/`catch`/`finally` for mutation flow.
 

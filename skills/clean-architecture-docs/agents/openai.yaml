@@ -1,4 +1,4 @@
 interface:
   display_name: "JSDoc & Feature Handoff Docs"
-  short_description: "Thai JSDoc for code and conditions; client flow handoffs"
-  default_prompt: "Use $clean-architecture-docs to write source-backed Thai JSDoc for declarations and every condition in scope, or create feature handoff docs; for handoffs, ask for missing platform, language, and feature scope first."
+  short_description: "Write Thai JSDoc or source-backed client handoffs"
+  default_prompt: "Use $clean-architecture-docs for the requested JSDoc or handoff; ask only missing handoff platform, language, and flow choices."

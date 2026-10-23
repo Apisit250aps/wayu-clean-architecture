@@ -1,15 +1,14 @@
-# Clean Architecture Naming, Linting & Boundary Enforcements
+# Naming, formatting, and boundary enforcement
 
-## 1. Zero Tolerance Type & Linting Rules 🛡️
+## Types and names
 
-When writing or modifying code in Clean Architecture:
-- ❌ **NEVER use `// @ts-ignore`, `// @ts-expect-error`, or `// @ts-nocheck`**: Fix TypeScript errors by writing proper types or interfaces.
-- ❌ **NEVER use `// eslint-disable` or `/* eslint-disable */`**: Resolve linting errors by adhering to the established rules.
-- ❌ **NO `any` types**: Always define explicit interfaces or use `unknown` if dynamic, then safely narrow down.
+Use explicit types or `unknown` with narrowing; no `any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, or eslint-disable comments. Fix the contract instead of suppressing the failure.
 
----
+Follow sibling module/file names and preserve public imports. Group by business capability and split by responsibility, not an arbitrary file length. Stable Domain values belong in owning constants; helpers use descriptive concrete files rather than a generic utility bucket.
 
-## 2. Prettier Formatting Configuration (`.prettierrc`)
+## Formatting
+
+Use the repository's formatter/configuration. For a new workspace with no convention, a compact baseline is:
 
 ```json
 {
@@ -22,105 +21,14 @@ When writing or modifying code in Clean Architecture:
 }
 ```
 
-### `.prettierignore`
-```text
-node_modules
-.next
-out
-build
-dist
-coverage
-*.log
-package-lock.json
-pnpm-lock.yaml
-bun.lock
-bun.lockb
-.agents
-```
+Ignore dependencies, build/generated output as appropriate, coverage, logs, lockfiles, and agent caches. Add format/check scripts using the existing package runner; do not reformat unrelated files for a scoped change.
 
----
+## Enforcing boundaries
 
-## 3. Monorepo Boundary Enforcement (`.dependency-cruiser.cjs`)
+Use existing ESLint/import tooling or dependency-cruiser if installed. Implement [the package matrix](architecture-overview.md#package-matrix), covering package roots, subpaths, aliases, and relative imports. For a single-package layout, map the same rules to its Domain/Application/infrastructure/presentation directories.
 
-```javascript
-/** @type {import('dependency-cruiser').IConfiguration} */
-module.exports = {
-  forbidden: [
-    // 1. Domain cannot import anything from Application, Infrastructure, Database, or Presentation
-    {
-      name: 'domain-cannot-import-others',
-      comment: 'Domain layer must be independent of other layers (Clean Architecture).',
-      severity: 'error',
-      from: {
-        path: '^packages/domains/src',
-      },
-      to: {
-        path: '^(packages/(applications|infrastructures|database|ui)/src|apps/)',
-      },
-    },
-    // 2. Application cannot import Infrastructure or Presentation
-    {
-      name: 'application-cannot-import-infrastructure-or-presentation',
-      comment: 'Application layer can only depend on Domain, not Infrastructure or UI.',
-      severity: 'error',
-      from: {
-        path: '^packages/applications/src',
-      },
-      to: {
-        path: '^(packages/(infrastructures|database|ui)/src|apps/)',
-      },
-    },
-    // 3. Infrastructure shouldn't import Presentation
-    {
-      name: 'infrastructure-cannot-import-presentation',
-      comment: 'Infrastructure layer should not depend on UI or Apps.',
-      severity: 'error',
-      from: {
-        path: '^packages/(infrastructures|database)/src',
-      },
-      to: {
-        path: '^(packages/ui/src|apps/)',
-      },
-    },
-  ],
-  options: {
-    doNotFollow: { path: 'node_modules' },
-    tsConfig: { fileName: 'tsconfig.json' },
-    tsPreCompilationDeps: true,
-    enhancedResolveOptions: {
-      exportsFields: ['exports'],
-      conditionNames: ['import', 'require', 'node', 'default'],
-    },
-  },
-};
-```
+Keep composition exceptions limited to actual wiring files. Do not replace existing restrictions when adding a rule, or assume package-import checks detect cross-owner SQL/helpers. Verify one allowed and one forbidden import using the project's resolution settings, then remove probes.
 
----
+## Helpers and comments
 
-## 3. Single Repository Boundary Enforcement (`.dependency-cruiser.cjs`)
-
-```javascript
-/** @type {import('dependency-cruiser').IConfiguration} */
-module.exports = {
-  forbidden: [
-    {
-      name: 'domain-cannot-depend-on-outer-layers',
-      severity: 'error',
-      from: { path: '^src/domain' },
-      to: { path: '^src/(application|infrastructure|presentation)' },
-    },
-    {
-      name: 'application-cannot-depend-on-infrastructure-or-presentation',
-      severity: 'error',
-      from: { path: '^src/application' },
-      to: { path: '^src/(infrastructure|presentation)' },
-    },
-    {
-      name: 'presentation-cannot-depend-on-infrastructure',
-      severity: 'error',
-      from: { path: '^src/presentation' },
-      to: { path: '^src/infrastructure' },
-    },
-  ],
-};
-```
+Follow [helper ownership/import rules](../SKILL.md#helper-files-and-imports). Add Thai JSDoc for declarations and every condition written/changed, explaining source facts, reason, and outcomes; use the relevant sections of [the JSDoc guide](../../clean-architecture-docs/references/jsdoc.md). Do not change logic to accommodate comments.

@@ -1,163 +1,29 @@
-# Infrastructure Layer Patterns & Code Templates
+# Repository and external adapters
 
-Read [repository ownership, queries, and transactions](repository-boundaries.md) before using these illustrative templates. They do not authorize cross-owner queries or establish ambient transaction behavior in a consuming project. Add Thai JSDoc to every condition written or changed using [the condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions).
+Concrete adapters implement Domain ports. Preserve established package placement and reuse typed mechanics. Read [repository boundaries](repository-boundaries.md) for repository changes; schema and migration work uses [Drizzle patterns](drizzle-patterns.md).
 
-## 1. Reuse the existing generic repository
+## Repository construction
 
-Use the consuming project's typed owner-scoped CRUD base rather than copying another generic implementation. Inspect its connection resolver, mapping, tenant predicates, and side effects before extending it. Shared mechanics operate only on the caller's own tables; audit and cross-owner work belong to Application Services. See [the base repository guidance](drizzle-patterns.md#4-reuse-the-existing-base-repository) and [ownership/transaction rules](repository-boundaries.md).
+Inject the existing database/transaction infrastructure and non-repository adapter dependencies actually needed. Never inject, instantiate, call, or obtain another repository through a helper, callback, container, base class, or service. A composition root creates repositories separately and injects their Domain ports into Application Services.
 
----
+A repository may own aggregate child/history tables. All queries and side effects, including inherited helpers, stay within that ownership. Foreign keys to other owners remain valid integrity constraints, not read/write access permissions.
 
-## 2. Drizzle Schema Helpers & UUIDv7 (`database/lib/utils.ts`)
+## Method implementation
 
-```typescript
-// packages/database/src/lib/utils.ts
-import { uuid, timestamp } from 'drizzle-orm/pg-core';
-import { v7 as uuidv7 } from 'uuid';
+1. Implement the port's scoped operation, including active/deleted, duplicate/missing-ID, ordering, and empty-batch semantics.
+2. Query through the project's current transaction resolver. Keep the root connection identity used by UnitOfWork; do not replace it mechanically or mutate singleton connection fields.
+3. Use typed columns and explicit result mapping where shapes differ. Preserve native Date/numeric/custom decoders and nullability; casts do not validate or remove fields.
+4. Enforce unique/revision conditions atomically where required, and translate known storage conflicts using established typed errors.
+5. Batch reads/writes instead of query-per-item loops. Coordinate cross-owner filters, locks, and audit through Application Services, preserving pagination semantics.
 
-export const generateUUID = () => uuidv7();
+Trust-boundary validation remains required; do not add redundant parsing of every typed ORM result as a substitute for explicit mapping and integrity guards. Validate untrusted external/JSON payloads according to their actual contract.
 
-export function primaryKeyUuid7<T extends string>(columnName: T) {
-  return uuid(columnName)
-    .primaryKey()
-    .$defaultFn(() => generateUUID());
-}
+## External adapters
 
-export function updatedAtTimestamp<T extends string>(columnName: T) {
-  return timestamp(columnName)
-    .$onUpdate(() => new Date())
-    .notNull();
-}
+Reuse existing authentication, password hashing, storage, and provider clients. Expose only required Domain ports; keep SDK types, credentials, and provider-specific errors in the adapter. Preserve failure semantics, redaction, and idempotency where the workflow needs them. Do not build an alternate credential system or a generic adapter framework for one operation.
 
-export function createdAtTimestamp<T extends string>(columnName: T) {
-  return timestamp(columnName).defaultNow().notNull();
-}
-```
+Keep provider calls outside long DB transactions. Application decides any required compensation or durable delivery; a database rollback does not undo a remote operation.
 
----
+## Wiring and verification
 
-## 3. Concrete Repository Implementation (`infrastructures/repositories/user.repo.ts`)
-
-```typescript
-// packages/infrastructures/src/repositories/user.repo.ts
-import type { Database } from '@<project>/database/db';
-import { User } from '@<project>/domains/entities';
-import { IUserRepository } from '@<project>/domains/repositories/user';
-import { user } from '@<project>/database/schema';
-import { Repository } from '@<project>/database/repository';
-import { CreateUser, UpdateUser } from '@<project>/domains/schema/user';
-import { eq } from 'drizzle-orm';
-
-export default class UserRepository
-  extends Repository<User, CreateUser, UpdateUser>
-  implements IUserRepository
-{
-  constructor(db: Database) {
-    super(db, user);
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    const [result] = await this.db
-      .select()
-      .from(this.table)
-      .where(eq(user.email, email));
-    return (result as User) || null;
-  }
-}
-```
-
----
-
-## 4. Argon2 Password Hasher Adapter (`infrastructures/lib/password.ts`)
-
-```typescript
-// packages/infrastructures/src/lib/password.ts
-import argon2 from 'argon2';
-
-export const hash = async (password: string): Promise<string> => {
-  return argon2.hash(password);
-};
-
-export const verify = async ({
-  password,
-  hash,
-}: {
-  password: string;
-  hash: string;
-}): Promise<boolean> => {
-  return await argon2.verify(hash, password);
-};
-```
-
----
-
-## 5. Drizzle Table Schema (`database/schema/<module>.ts`)
-
-Drizzle schemas use helpers from `#lib/utils` and reference other tables via `.references()`:
-
-```typescript
-// packages/database/src/schema/product.ts
-import { pgTable, text, index, uuid, numeric } from 'drizzle-orm/pg-core';
-import {
-  primaryKeyUuid7,
-  updatedAtTimestamp,
-  createdAtTimestamp,
-} from '../lib/utils';
-import { company } from './company';
-
-export const product = pgTable(
-  'product',
-  {
-    id: primaryKeyUuid7('id'),
-    companyId: uuid('company_id')
-      .notNull()
-      .references(() => company.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
-    sku: text('sku').notNull(),
-    description: text('description'),
-    costPrice: numeric('cost_price', { precision: 12, scale: 2 }).notNull(),
-    salePrice: numeric('sale_price', { precision: 12, scale: 2 }).notNull(),
-    createdAt: createdAtTimestamp('created_at'),
-    updatedAt: updatedAtTimestamp('updated_at'),
-  },
-  (table) => [
-    index('product_companyId_idx').on(table.companyId),
-  ],
-);
-```
-
-**Rules for Drizzle schemas:**
-
-- Always use `primaryKeyUuid7('id')` — never `serial()` or manual `text().primaryKey()`
-- Always use `createdAtTimestamp('created_at')` and `updatedAtTimestamp('updated_at')`
-- Add `index(...)` for every foreign key column
-- Export the table from `src/schema/index.ts`
-
----
-
-## 6. Relations Definition (`database/relations.ts`)
-
-All table relations are centralized in one `relations.ts` file using `defineRelationsPart`:
-
-```typescript
-// packages/database/src/relations.ts
-import { defineRelationsPart } from 'drizzle-orm';
-import * as schema from './schema';
-
-export const relations = defineRelationsPart(schema, (r) => ({
-  product: {
-    company: r.one.company({ from: r.product.companyId, to: r.company.id }),
-    category: r.one.category({ from: r.product.categoryId, to: r.category.id }),
-  },
-  company: {
-    products: r.many.product(),
-  },
-  // ... add all relations here
-}));
-```
-
-The `relations` object is spread into `drizzle()` in `db.ts`:
-
-```typescript
-const db = drizzle(url, { relations: { ...relations }, logger: true });
-```
+Update composition, exports, callers, mocks, and tests when a port changes. Required dependencies must fail wiring instead of selecting fallback adapters or skipping guards. Share the actual UnitOfWork database identity among participating repositories. Test real transaction/lock behavior before claiming it; isolated fake tests prove orchestration only.

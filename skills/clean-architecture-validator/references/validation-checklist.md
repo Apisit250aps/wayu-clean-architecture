@@ -1,6 +1,12 @@
 # Architecture verification checklist
 
-Read the current core, frontend, and persistence entrypoints for ownership rules. Audit the actual target repository; examples are not proof of compliance.
+Read only the sections relevant to the requested scope. Audit actual source and callers; follow linked rule details when needed rather than loading every layer skill. Examples are not implementation proof.
+
+## Imports and type safety
+
+- Follow [the package matrix](../../clean-architecture-foundation/references/architecture-overview.md#package-matrix), including aliases/subpaths and isolated composition exceptions.
+- No `any`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`, or lint-disable shortcuts. Inspect search matches before reporting violations.
+- Controllers invoke use cases; browser modules cannot import backend composition.
 
 ## Domain and constants
 
@@ -43,7 +49,7 @@ Apply [the ownership rules](../../clean-architecture-persistence/references/repo
 
 ## Condition JSDoc checks
 
-Use [the full condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions). Within the requested scope/diff, inventory conditions rather than searching only for `if`.
+Use [the full condition guide](../../clean-architecture-docs/references/conditions.md). Within the requested scope/diff, inventory conditions rather than searching only for `if`.
 
 - Every new/changed branch, guard, `switch/case/default`, ternary/render expression, logical/nullish/default/optional expression, loop/recursion/callback predicate, refinement/assertion, result/error discriminant, and SQL/ORM condition has adjacent Thai JSDoc.
 - Comments explain the checked source fact, reason, and true/false or selected/fallback/continuing outcomes. Compound predicates explain every part and short-circuit behavior where relevant.
@@ -72,6 +78,8 @@ Use [the full condition guide](../../clean-architecture-docs/references/jsdoc.md
 - Real response envelopes, errors, nulls, dates, and attachments are checked when their contracts change.
 
 ## Frontend and UI
+
+- Mockups may use Domain-informed fixtures before the API exists. Real integration uses the main application's spec-generated client; mock completion is separate from integrated behavior.
 
 - Reuse packages/ui primitives and shared fields/tables/overlays before adding markup.
 - Generic RHF Controller-backed fields and TanStack Table compositions are allowed in UI; business data fetching and tenant policy are not.

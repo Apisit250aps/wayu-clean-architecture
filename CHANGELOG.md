@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.1.0
+
+Plan parallel delivery from usable Domain contracts and slim every skill entrypoint with task-specific references.
+
+- Shorten all eight skill entrypoints and load detailed references by task; separate handoff, condition JSDoc, and parallel-delivery guidance.
+- Replace duplicated/obsolete scaffold implementations with focused package, adapter, API, and wiring guidance; remove examples using suppressed types, broad casts, or unscoped CRUD.
+- Clarify pure Domain rules versus Application Service orchestration, composition-root wiring, and the prohibition on direct/indirect repository dependencies.
+- Keep Thai summaries/English task templates, narrow verification claims, and shared-reference installation requirements explicit.
+- Plan usable Domain contracts from agreed ERD/business flows before parallel repository, use-case, business-service, API spec, and Web mockup work.
+- Separate task start prerequisites from integration prerequisites; record contract baselines, file ownership, parallel work, and affected consumers when contracts change.
+- Keep Web mockups independent of API readiness while preserving the main application's spec-generated client as the real HTTP type source.
+- Update planning templates, discovery metadata, Frontend mockup guidance, and README; preserve separate Web, Backend, and Database delivery areas.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill '*' --agent codex --agent claude-code --global --yes
+```
+
 ## v3.0.1
 
 Complete the v3.0.0 guidance bundle by publishing the pending time-handling changes that were omitted from that release. Repository ownership and condition JSDoc rules remain in effect.

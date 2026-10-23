@@ -12,7 +12,7 @@ For every new module or table:
 
 - Create or update `src/constants/<module>.ts` and its public export.
 - Identify resource codes and actual finite values (status, action, mode, limits). Reuse an existing aggregate's constants for its internal tables; record that mapping explicitly.
-- Add system permission actions and feature metadata only where the business capability requires them; update the central catalogs and explicit seed grants together.
+- Add system permission actions and feature metadata only where the capability requires them; synchronize `FEATURE_CODES`, `SYSTEM_FEATURES`, `PERMISSION_ACTIONS`, `SYSTEM_PERMISSIONS`, and explicit default-role/seed grants where present.
 - Reuse the same values in Zod enums, application checks, DB enum definitions, and API contracts where supported. Keep the dependency direction inward.
 - Do not put mutable tenant settings, translated UI labels, SQL names, credentials, or arbitrary invented defaults in domain constants.
 

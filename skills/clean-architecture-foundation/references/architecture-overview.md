@@ -1,114 +1,37 @@
-# Clean Architecture Overview & Dependency Inversion
+# Architecture and ownership
 
-## The Core Rings of Clean Architecture
+These are this collection's package conventions. Adapt package names/locations to the target repository; keep dependency direction and business ownership explicit.
 
-Clean Architecture organizes software into concentric circles representing different areas of software:
+## Package matrix
 
-```
-                  ┌──────────────────────────────┐
-                  │    Presentation Layer        │
-                  │ (HTTP, CLI, WebSockets, UI)  │
-                  ├──────────────────────────────┤
-                  │    Infrastructure Layer      │
-                  │   (Database, APIs, Cache)    │
-                  ├──────────────────────────────┤
-                  │     Application Layer        │
-                  │   (Use Cases, DTOs, Ports)   │
-                  ├──────────────────────────────┤
-                  │        Domain Layer          │
-                  │  (Entities, Value Objects)   │
-                  └──────────────────────────────┘
-```
+| Package/layer | Responsibility and allowed dependencies | Forbidden |
+| --- | --- | --- |
+| Domain | Contracts, constants, entities, pure rules; pure libraries such as Zod, uuid, date-fns | Internal outer packages, DB/HTTP/UI/framework I/O, current-time reads in business rules |
+| Application | Use cases and Application Services; Domain interfaces and pure helpers | Concrete adapters, ORM/SQL, HTTP request/response types, UI |
+| Database | Schemas, migrations, DB mechanics, owned adapters where established; Domain + database libraries | Application implementations, UI/client, infrastructure composition |
+| Infrastructure | Concrete adapters; Domain/database/external SDKs | UI/browser code; adapter imports back into core |
+| Composition root | Wires concrete adapters and Application implementations, isolated at the server boundary | Import into Domain, use cases, or browser bundles |
+| API/presentation | Auth/context, transport validation, use-case invocation, HTTP mapping | Direct repository/DB operations inside handlers |
+| Generated client | Main application TypeSpec/OpenAPI types and SDK output | Hand-edited generated output or backend runtime dependencies |
+| Shared UI | Generic accessible components, RHF fields/tables/overlays | Business hooks/policy, generated services, backend modules |
+| Web | Routes/features/hooks; UI, generated client, safe public Domain types/constants | Database connections and server composition in browser modules |
 
-### 1. Domain Layer (Innermost Ring)
-- Contains Enterprise-wide business rules.
-- Contains Entities, Value Objects, Domain Events, and Repository Interfaces.
-- **Dependency Rule**: Depends on NO external libraries or other layers. Pure business logic only.
+## Runtime calls and source dependencies
 
-### 2. Application Layer
-- Contains Application-specific business rules (Use Cases / Interactors).
-- Orchestrates data flow to and from Entities.
-- Defines input/output DTOs and interfaces for external dependencies (Ports).
-- **Dependency Rule**: Depends only on the Domain Layer.
+```text
+Controller → Use case → Application Service → Repository A
+                                           → Repository B
+                        ↘ Pure Domain rules
 
-### 3. Infrastructure Layer
-- Implements the interfaces defined in Domain (Repositories) and Application (Ports).
-- Communicates with Database (SQL, MongoDB, Prisma, etc.), third-party APIs, Message Brokers.
-- **Dependency Rule**: Depends on Application and Domain layers.
-
-### 4. Presentation Layer (Outermost Ring)
-- Handles user input, routes requests to Application Use Cases, and formats the output.
-- Contains Controllers, Middlewares, Request Validators, and Presenters.
-- **Dependency Rule**: Depends on Application and Domain layers.
-
----
-
-## Dependency Inversion in Action (TypeScript Example)
-
-### Step 1: Domain defines the contract (Interface)
-```typescript
-// src/domain/repositories/user.repository.interface.ts
-import { User } from '../entities/user.entity';
-
-export interface IUserRepository {
-  findById(id: string): Promise<User | null>;
-  save(user: User): Promise<void>;
-}
+Composition root creates the implementations and injects them.
+Application imports Domain ports, not concrete repositories.
+Repository A does not depend on or call Repository B.
 ```
 
-### Step 2: Application uses the contract
-```typescript
-// src/application/use-cases/get-user.usecase.ts
-import { IUserRepository } from '../../domain/repositories/user.repository.interface';
-import { UserDto } from '../dtos/user.dto';
+A single-owner use case need not add a pass-through service. A named Application Service owns a cohesive workflow requiring multiple owners. Pure rules compute from supplied facts and do not fetch repositories. See [Application patterns](../../clean-architecture-core/references/usecase-patterns.md#service-composition-and-dependencies).
 
-export class GetUserUseCase {
-  constructor(private readonly userRepo: IUserRepository) {}
+Table ownership is separate from package placement. An aggregate repository may own multiple child/history tables and JOIN its own tables. Cross-owner reads/writes, including hidden helper/view/audit paths, go through Application orchestration and each owner's port. See [repository boundaries](../../clean-architecture-persistence/references/repository-boundaries.md).
 
-  async execute(userId: string): Promise<UserDto> {
-    const user = await this.userRepo.findById(userId);
-    if (!user) throw new Error('User not found');
-    return UserDto.fromEntity(user);
-  }
-}
-```
+## Enforcement
 
-### Step 3: Infrastructure implements the contract
-```typescript
-// src/infrastructure/database/repositories/prisma-user.repository.ts
-import { PrismaClient } from '@prisma/client';
-import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
-import { User } from '../../../domain/entities/user.entity';
-
-export class PrismaUserRepository implements IUserRepository {
-  constructor(private readonly prisma: PrismaClient) {}
-
-  async findById(id: string): Promise<User | null> {
-    const record = await this.prisma.user.findUnique({ where: { id } });
-    if (!record) return null;
-    return new User(record.id, record.name, record.email);
-  }
-
-  async save(user: User): Promise<void> {
-    await this.prisma.user.upsert({
-      where: { id: user.id },
-      update: { name: user.name, email: user.email },
-      create: { id: user.id, name: user.name, email: user.email },
-    });
-  }
-}
-```
-
-### Step 4: Composition Root (main.ts) wires them together
-```typescript
-// src/main.ts
-import { PrismaClient } from '@prisma/client';
-import { PrismaUserRepository } from './infrastructure/database/repositories/prisma-user.repository';
-import { GetUserUseCase } from './application/use-cases/get-user.usecase';
-import { UserController } from './presentation/http/controllers/user.controller';
-
-const prisma = new PrismaClient();
-const userRepo = new PrismaUserRepository(prisma);
-const getUserUseCase = new GetUserUseCase(userRepo);
-const userController = new UserController(getUserUseCase);
-```
+Use existing lint/import tooling to enforce the matrix, including aliases, package roots, and subpaths. Restrict any composition exception to its actual files. Import checks do not prove table ownership, tenant isolation, transaction propagation, or runtime behavior; inspect and test those separately.

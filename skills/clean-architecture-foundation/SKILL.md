@@ -1,43 +1,38 @@
 ---
 name: clean-architecture-foundation
-description: Set up or extend a Clean Architecture Turborepo workspace, including package scaffolding, naming, formatting, and dependency-boundary enforcement.
+description: Set up or extend Clean Architecture workspaces, packages, shared tooling, and dependency boundaries. Use layer skills for feature implementation.
 ---
 
 # Clean Architecture Foundation
 
-Use this skill when creating a workspace, adding a package, or changing shared TypeScript, formatting, import, or boundary configuration. Do not use it for a feature implementation inside an established layer; use that layer's skill instead.
+Inspect repository instructions, manifests, exports, aliases, and shared tooling before changing them. Read only the reference sections needed for the requested setup.
 
-## Choose the smallest mode
+## Choose the work
 
-- **Workspace setup:** establish the root layout, shared tooling, and dependency direction. Read [architecture overview](references/architecture-overview.md) first; read [starter libraries](references/starter-libraries.md) only when installing those implementations.
-- **Package setup:** add or repair one package's manifest, exports/imports, TypeScript config, ESLint rules, and starter layout. Read [package presets](references/package-presets.md).
-- **Conventions:** change names, Prettier, or boundary enforcement. Read [naming and style](references/naming-and-style.md).
-- **Time:** add date/time/time-zone handling, a date formatter, or its lint rules. Read [time handling](references/time-handling.md).
+| Work | Read |
+| --- | --- |
+| Workspace layout or import boundaries | [Architecture overview](references/architecture-overview.md) |
+| Package manifests, exports, TypeScript or lint setup | [Package presets](references/package-presets.md) |
+| Naming, formatting or enforcement | [Naming and style](references/naming-and-style.md) |
+| Shared library scaffolding | [Starter library decisions](references/starter-libraries.md); reuse existing code first |
+| Date/time handling or its lint rules | [Time handling](references/time-handling.md) |
+| Example of multi-layer wiring | [Product walkthrough](references/end-to-end-example.md), only when useful |
 
-## Invariants
+## Boundaries
 
-Keep dependencies inward: domains has no internal dependency; database and applications depend on domains; infrastructures depends on domains and database; interface packages may depend on the layers they compose. Configure the restriction where it is enforceable, and verify with the workspace's type-check and lint commands.
-
-Repository ownership is stricter than package import direction: each repository accesses only its owned tables, with no direct or indirect dependency on another owner. Application Services compose owner ports; SQL JOINs, read models, helper queries, locks, and audit do not bypass this rule. Use [the ownership reference](../clean-architecture-persistence/references/repository-boundaries.md) when designing boundaries or enforcement, including schema/view/function/helper paths and caller wiring. Import lint alone cannot prove ownership.
-
-## Conditions and JSDoc
-
-When writing or changing JavaScript/TypeScript, document every condition with Thai JSDoc, not only declarations or complex branches. Cover guards, if/else, switch, ternary, logical/nullish/optional expressions, loop/callback predicates, schema validation, and query conditions. Follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions); preserve logic and explain the checked fact, reason, and outcomes rather than restating the operator.
-
-## Growing a modular workspace
-
-Inspect current manifests, aliases, shared configs, constants, and helper libraries before scaffolding copies. Include domain constants and module-level exports in presets for new capabilities. Preserve public import paths when splitting large modules and verify entity/client generators still discover the moved files.
-
-Shared libraries follow ownership, not a blanket ban on composition: domain-neutral RHF fields, tables, and overlays belong in UI; tenant/business orchestration belongs in Web or Application. The current core/frontend skills govern new work if an older starter example is more restrictive. A composition root may wire Application implementations to infrastructure adapters; keep that wiring isolated from the inner core and browser bundles.
+- Domain has no internal package dependencies. Applications depend on Domain; persistence adapters depend on Domain and database mechanics. Only an isolated composition root wires concrete adapters to Application implementations.
+- A repository owns its tables and has no repository dependency, direct or indirect. Application Services coordinate multiple owners. For ownership/enforcement changes, read [repository boundaries](../clean-architecture-persistence/references/repository-boundaries.md); import lint alone cannot prove compliance.
+- Preserve public imports and generator discovery when splitting modules. New capabilities include their owning constants and exports.
+- Shared UI may compose generic RHF fields/tables/overlays; business orchestration belongs in Web/Application. Keep backend wiring out of browser bundles.
 
 ## Helper files and imports
 
-In every layer, import utils, lib, and helper symbols directly from their concrete file or explicit package subpath. Never import them through an `index.ts` barrel, an aggregate re-export, or a package root that re-exports them. Package export maps may expose concrete subpaths; unrelated domain/entity/constants barrels remain governed by the existing architecture.
+Import utils/lib/helpers from concrete files or explicit package subpaths, never barrels/root re-exports. Keep standalone helpers outside Application/use-case and class files, in their owning package. Constructors, class methods, and necessary inline callbacks remain allowed.
 
-Keep standalone function declarations and helper arrow functions out of Application/use-case files and any file defining a class. Extract them into cohesive utils/helper/lib files owned by the same package and import them directly. Class constructors and methods remain in their class; this rule does not prohibit method bodies or necessary inline callbacks.
+## Code and verification
 
-## Time
+Use explicit types or narrowed `unknown`; no `any`, TypeScript suppression, or lint-disable comments. Every new/changed condition needs Thai JSDoc explaining its fact, reason, and outcomes; use the [condition guide](../clean-architecture-docs/references/conditions.md) for placement/coverage.
 
-Dates use the native `Date` with `date-fns`/`@date-fns/tz` imported directly by each package; there is no shared date wrapper, no Temporal, and no clock port. Use cases read `new Date()` once and pass `now`/`timeZone` into pure logic and repositories; repositories never read the clock. Display formatting is Web/UI-only through one central formatter. Read [time handling](references/time-handling.md) for recipes and lint rules.
+Dates use native `Date` and direct date-fns imports; no Temporal, shared date wrapper, or clock port. Use cases sample `now` once, repositories receive it, and Web/UI owns display formatting. Read the time reference when that behavior changes.
 
-For an illustrative multi-layer wiring example, read [the Product walkthrough](references/end-to-end-example.md) only when useful. Apply the current layer skills over older example patterns.
+Run affected type/lint/export checks using repository commands; test changed enforcement with a temporary violating import and remove the probe. Report actual checks and remaining gaps.

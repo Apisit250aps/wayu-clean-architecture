@@ -8,11 +8,11 @@ Constructors accept domain ports, including `IUnitOfWork` when needed. Keep requ
 
 ## Service composition and dependencies
 
-A use case delegates cohesive multi-repository work to an Application Service with required, narrow Domain ports. A port describes the contract; it does not require another wrapper layer or a duplicate `Ports` object. Prefer a few explicit constructor dependencies, and never construct fallback repositories or silently skip work when a required dependency is missing.
+A use case delegates cohesive multi-repository work to a named Application Service with required, narrow Domain ports. Pure Domain rules calculate from supplied facts; they do not load repositories. A single-owner operation does not need a pass-through service. A port describes the contract; it does not require another wrapper layer or a duplicate `Ports` object. Prefer a few explicit constructor dependencies, and never construct fallback repositories or silently skip work when a required dependency is missing.
 
-Services batch-read each owner's source data and assemble related summaries without querying databases themselves. Repositories cannot call each other or read the other owner's tables through JOINs, raw SQL, views, or helper callbacks. Include audit writes and lock coordination in the Service/UnitOfWork boundary. Preserve source-dependent filtering before pagination; enrichment of a page is sufficient only when related fields do not change filtering/order/total. See [repository ownership](../../clean-architecture-persistence/references/repository-boundaries.md).
+Services batch-read each owner's source data and assemble related summaries without querying databases themselves. Repositories cannot call each other or read the other owner's tables through JOINs, raw SQL, views, or helper callbacks. The enclosing use case or cohesive service owns the complete transaction boundary, including required reads/locks, mutations, history, and audit. Do not let each owner commit its part independently. Preserve source-dependent filtering before pagination; enrichment of a page is sufficient only when related fields do not change filtering/order/total. See [repository ownership](../../clean-architecture-persistence/references/repository-boundaries.md).
 
-Add Thai JSDoc for all conditions written or changed, following [the condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions).
+Add Thai JSDoc for all conditions written or changed, following [the condition guide](../../clean-architecture-docs/references/conditions.md).
 
 ## Execute a command
 

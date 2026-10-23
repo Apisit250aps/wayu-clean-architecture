@@ -29,11 +29,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 ### Install a specific Release / Version Tag 🏷️
 
 ```bash
-# Install from a specific version/tag (e.g. v3.0.1)
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1
+# Install from a specific version/tag (e.g. v3.1.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -69,16 +69,16 @@ Version 3.0.0 keeps all eight skill names but makes repository ownership stricte
 
 Read [repository ownership, queries, and transactions](skills/clean-architecture-persistence/references/repository-boundaries.md) before migrating existing code. A query-builder rewrite alone does not remove a hidden dependency, and fewer queries do not prove a speed improvement. Skills provide guidance and audit criteria; installation does not refactor a project, add lint rules automatically, or certify its compliance.
 
-Thai JSDoc now covers every condition written or changed, including guards, branches, shorthand/default expressions, callback/schema predicates, and SQL/ORM conditions. Explain the checked fact, why it matters, and each outcome using [the condition guide](skills/clean-architecture-docs/references/jsdoc.md#conditions). Existing untouched code is audited only within the requested scope.
+Thai JSDoc now covers every condition written or changed, including guards, branches, shorthand/default expressions, callback/schema predicates, and SQL/ORM conditions. Explain the checked fact, why it matters, and each outcome using [the condition guide](skills/clean-architecture-docs/references/conditions.md). Existing untouched code is audited only within the requested scope.
 
 Install all eight skills from the release in each scope you use:
 
 ```bash
 # Global Codex skills
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --global --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill '*' --agent codex --global --yes
 
 # Project Codex skills: run from the project's root
-npx skills add Apisit250aps/wayu-clean-architecture#v3.0.1 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill '*' --agent codex --yes
 ```
 
 Review local skill customizations before updating; do not delete unrelated skills or legacy entries solely as part of this release.
@@ -93,7 +93,7 @@ Web/UI display formatting uses central presets; calendar math and SQL conversion
 
 | Skill Name                           | Scope / Tag           | Description                                                                                        | Key Focus                                                                                             |
 | :----------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| **`clean-architecture-plan`**        | `🏷️ Planning`         | Create coded, layer-separated task plans.                                                          | Thai Trello README, English AI tasks, linked checklists, and reusable templates.                      |
+| **`clean-architecture-plan`**        | `🏷️ Planning`         | Plan Domain contracts first, then asynchronous implementation.                                     | Thai summaries, English tasks, parallel tracks, contract ownership, and integration gates.           |
 | **`clean-architecture-docs`**        | `🏷️ Documentation`    | Write Thai JSDoc or create feature and flow docs for Mobile or Web teams.                          | Source-backed declaration/condition JSDoc, interactive handoff intake, and API diagrams.              |
 | **`clean-architecture-foundation`**  | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions.                                          | Turborepo setup, package presets, Prettier, and dependency boundaries.                                |
 | **`clean-architecture-core`**        | `🏷️ Backend`          | Design modular Domain and Application workflows for configurable tenant systems.                   | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency.   |
@@ -143,10 +143,14 @@ wayu-clean-architecture/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
     │   ├── assets/handoff.md
-    │   └── references/jsdoc.md
+    │   └── references/
+    │       ├── jsdoc.md
+    │       ├── conditions.md
+    │       └── handoff-workflow.md
     ├── clean-architecture-plan/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
+    │   ├── references/parallel-delivery.md
     │   └── assets/
     │       ├── main-task.README.md
     │       └── task.md
@@ -199,15 +203,23 @@ wayu-clean-architecture/
 
 Use `$clean-architecture-plan` to create `plans/<task-code>-<ชื่อ main task>/README.md` with a short Thai Trello summary and linked direct-child checklist. English AI instructions live in `tasks/`; deeper subtasks are linked only from their parent task. Web, Backend (API/client/infra/domains/application), and Database (domains/database) have separate main tasks, with explicit ownership for shared domain changes. Templates are included in the skill assets.
 
+Start from the agreed ERD and business flows, then define a usable Domain contract slice: types, ports, use-case inputs/results, errors, and business rules. Once those contracts are ready, repositories, use cases/Application Services, business-rule implementations, API spec/client work, and Web mockups can proceed in parallel according to their actual inputs. Every task distinguishes start prerequisites from integration prerequisites and records file ownership plus a contract baseline. A child contract task can unblock consumers before its main task is complete.
+
+Web mockups use Domain-informed typed fixtures or view models without waiting for HTTP contracts. Real API integration still uses the main application's spec-generated client types. Separate integration tasks connect real collaborators and verify behavior; a completed mockup or isolated use-case test does not mean the integrated feature is complete.
+
 Across implementation skills, utils/lib/helpers use concrete-file imports and standalone helpers live outside use-case/class files. Web editable form/input state uses RHF/Controller; React Query owns server state.
 
 ## 🚀 How AI Agents Use These Skills
 
 Each skill includes `SKILL.md` for its working instructions and `agents/openai.yaml` for Codex UI metadata (`display_name`, `short_description`, and `default_prompt`). Supporting references and assets remain specific to each skill.
 
+Load the relevant skill entrypoint, then only reference sections needed for the current task. Links are conditional reading routes, not instructions to load the entire collection. Entry points retain essential boundaries; detailed ownership/transaction rules, condition JSDoc, handoff requirements, and parallel planning each have a focused reference. Existing repository code and installed tooling determine implementation details; examples are illustrative, not drop-in libraries.
+
+The skills share some relative references. Install the collection together when using those shared rules; a copied standalone folder may have missing links. If a required reference is unavailable, report that gap rather than silently inventing its rules. Shorter entrypoints reduce text loaded initially; actual token use still depends on selected references and repository inspection.
+
 Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Diagrams use English; headings and explanatory prose use the selected language. Each flow separates its flowchart, step/decision explanation, sequence diagram, and API ordering explanation into readable sections. API examples show request bodies, HTTP statuses, responses, and next client actions for each source-supported integration case. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
 
-For code documentation, the same skill uses [the Thai JSDoc guide](skills/clean-architecture-docs/references/jsdoc.md) to explain responsibilities, inputs, outputs, business rules, and errors from actual source. Its [condition rules](skills/clean-architecture-docs/references/jsdoc.md#conditions) cover every condition written or changed, not only method declarations or `if` statements. JSDoc requests do not require platform selection or handoff diagrams.
+For code documentation, the same skill uses [the Thai JSDoc guide](skills/clean-architecture-docs/references/jsdoc.md) to explain responsibilities, inputs, outputs, business rules, and errors from actual source. Its [condition rules](skills/clean-architecture-docs/references/conditions.md) cover every condition written or changed, not only method declarations or `if` statements. JSDoc requests do not require platform selection or handoff diagrams.
 
 Example: `ใช้ $clean-architecture-docs เพิ่ม JSDoc ภาษาไทยให้ UseCase และ Repository ของ feature ผู้ใช้ โดยอธิบายเงื่อนไข ผลลัพธ์ และข้อผิดพลาดตามโค้ดจริง`
 

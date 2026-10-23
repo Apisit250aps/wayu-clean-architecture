@@ -14,7 +14,16 @@ Cross-owner read projections, summaries, locks, and audit writes have no automat
 
 ## Application Services compose owners
 
-Use a named Application Service for a workflow that needs multiple repositories. Inject the relevant Domain interfaces as required constructor dependencies; keep ORM objects, database connections, and raw queries out of that service. A controller continues to invoke a use case, which can use the service.
+Use a named Application Service for a workflow that needs multiple repositories. Inject the relevant Domain interfaces as required constructor dependencies; keep ORM objects, database connections, and raw queries out of that service. A controller invokes a use case, which delegates the cohesive work to the service. The composition root creates/wires implementations; the service coordinates calls at runtime. Pure Domain rules receive facts and perform no repository I/O.
+
+```text
+Application Service → IRepositoryA + IRepositoryB   allowed
+Repository A → Repository B                        forbidden
+Repository A → helper/service → Repository B       forbidden
+Repository A → tables owned by B                   forbidden
+```
+
+Each rule/workflow has one implementation owner. Do not wrap every repository method in a service or duplicate the same orchestration in both use case and service.
 
 | Existing pattern                                                        | Replacement                                                                                        |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -72,7 +81,7 @@ Preserve latest-head/revision semantics, reopened states, half-open date ranges,
 
 Persist necessary source facts, explicit decisions, integrity/concurrency keys, and indispensable history. Derive reproducible totals, counts, balances, durations, percentages, and statuses. Before removing a derived field, retain the inputs, units, time boundaries, and historical policy needed to reproduce it; never invent missing history. A historical snapshot is justified by mutable source facts that cannot reproduce the original record, not by a calculation that remains reproducible. Measured performance exceptions require an explicit separately documented decision.
 
-Trace schema/view/function/trigger ownership, repository methods and helpers, Domain ports, Service/use-case callers, composition roots, exports, mocks, tests, and affected docs. Update them together. Add Thai JSDoc for actual contracts and every condition using [the condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions).
+Trace schema/view/function/trigger ownership, repository methods and helpers, Domain ports, Service/use-case callers, composition roots, exports, mocks, tests, and affected docs. Update them together. Add Thai JSDoc for actual contracts and every condition using [the condition guide](../../clean-architecture-docs/references/conditions.md).
 
 Verify relevant behavior: cross-tenant IDs, batch statement counts, empty/out-of-range pages, filters/order, native decoding/nulls, duplicate/missing IDs, whole-batch rollback, audit rollback, real lock contention, and latest finalized/reopened heads. Type-check and unit tests do not prove database isolation. Query-count reductions do not prove speed without timings/plans; keep benchmark, SQL integration, HTTP, browser, and device/provider evidence distinct.
 

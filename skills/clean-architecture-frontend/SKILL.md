@@ -1,69 +1,34 @@
 ---
 name: clean-architecture-frontend
-description: Build or refactor a Next.js feature UI using shared @repo/ui components, React Hook Form Controllers, React Query feature hooks, React Aria, and the generated API client.
+description: Build Next.js feature UIs or Domain-informed mockups with shared UI, RHF/Controller, React Query, and the main application's generated API client.
 metadata:
   tags: frontend
 ---
 
 # Clean Architecture Frontend
 
-Use this skill for work in `apps/web`, `packages/ui`, or `packages/client` in a Next.js Clean Architecture monorepo. Follow the repository's existing shared-component and feature-module patterns before adding new UI.
+Inspect the target feature and shared components before editing. Search UI primitives → shared UI fields/tables/overlays → app shared components/hooks → feature code. Reuse the closest suitable component; use the installed shadcn skill when a new primitive is needed.
 
-## Start with discovery
+## Ownership
 
-Before adding a component, search in this order:
+- `packages/ui`: generic, domain-neutral components and Controller-backed fields; no business hooks, generated services, or backend imports.
+- `apps/web`: thin routes and feature `views/components/hooks/utils`; hooks own client calls, errors, query keys, and invalidation.
+- `packages/client`: generated HTTP types/services. Configure once at the Web composition root and regenerate after spec changes; never hand-edit output.
 
-1. `@repo/ui/components/*` for primitives and shadcn/React Aria controls.
-2. `@repo/ui/form`, `@repo/ui/shared/*`, and `@repo/ui/hooks` for reusable controller-backed fields, tables, overlays, dashboards, and utilities.
-3. `apps/web/src/shared/components`, `shared/utils`, and `shared/hooks` for application-wide composition.
-4. The target feature's `components`, `hooks`, `utils`, and `views` for a local pattern.
+## Choose the work
 
-Compose an existing component when it satisfies the need. Create a new shared component only when it is domain-independent and reused or clearly reusable; otherwise keep it in the owning feature. Use the installed `$shadcn` skill to search and inspect shadcn components before creating a new primitive. React Aria is already part of the UI stack; preserve its accessible component and locale conventions.
+- **Mockup:** agreed Domain contracts and screen flows are enough to start. Use typed fixtures/props or existing mocks, safe public type imports or a small feature view model. Keep simulated wiring out of production requests. Real integration uses the main application's spec-generated client, with a separate mapping/integration task; do not create a second spec/client.
+- **Feature, form, or client integration:** read the relevant sections of [frontend patterns](references/frontend-patterns.md), including accessibility and data flow.
+- **Dates/time zones:** use the central UI formatter and `DATE_FORMATS` presets; no feature-local display formatters/options. Read [time handling](../clean-architecture-foundation/references/time-handling.md).
 
-## Responsibilities and imports
+## State and interaction
 
-```text
-packages/client  generated HTTP types, services, React Query artifacts
-       ↑
-apps/web         routes, feature views/components, feature query/mutation hooks
-       ↑
-packages/ui      reusable primitives and shared UI behavior, including form fields
-```
-
-- **`packages/client`** owns TypeSpec-generated `*.gen.ts` output. Regenerate it after a contract change; never hand-edit generated files. Configure the client at the web composition root.
-- **`packages/ui`** owns generic, domain-neutral UI. It may provide React Hook Form Controller-backed fields and other reusable interaction components. It must not import application modules, feature hooks, generated services, or domain-specific labels/rules.
-- **`apps/web`** owns routes, page/view composition, authorization-aware feature behavior, and `modules/<feature>/{components,hooks,utils,views}`. Pages should stay thin and render a view or layout. Feature hooks call `@repo/client`; components do not make raw HTTP calls.
-
-Read [frontend patterns](references/frontend-patterns.md) when implementing a feature, a reusable UI component, a form, or client data flow.
-
-## State, forms, and server data
-
-- Do not use `useEffect` to copy, initialize, synchronize, or derive component/form state. For forms, keep values in React Hook Form via `useForm`, `defaultValues`/`values`, `reset`, `watch`, and `Controller`.
-- In form and query/mutation-driven components, manage editable field/input state with React Hook Form and `Controller`. Keep query results, request status, and cache state in React Query; do not mirror them into form state.
-- Every reusable form field that binds a React Hook Form value must use `Controller`; consume the field's value, change handler, disabled state, and validation state inside its render function.
-- Resolve client data through feature `useQuery` hooks and writes through feature `useMutation` hooks. Define and reuse query-key factories from `shared/utils/query`; invalidate the narrow affected keys after success.
-- Put shared transformations, error-message extraction, date/path/query-key helpers, and payload mappers in `shared/utils` or feature `utils`, not inline in views.
-
-## React Compiler and interaction rules
-
-- Component render must remain declarative. Do not use `try`, `catch`, or `finally` in components, views, form handlers, or contexts. Handle request failures in mutation/query callbacks and reusable error utilities.
-- Use effects only for genuine external subscriptions or imperative browser integrations that cannot be expressed through React Hook Form, React Query, React Aria, props, or derived render state. Document that boundary when one is unavoidable.
-- Keep async request orchestration in hooks. Components invoke `mutate`/`mutateAsync` and render pending, success, and error states; they do not implement transport control flow.
+- RHF/Controller owns editable fields in form/query/mutation components. React Query owns server data, request status, and cache. Do not mirror either through `useEffect` or local state.
+- Use form defaults/values/reset, query/mutation callbacks, and render derivation. Effects are for genuine external subscriptions/imperative browser APIs with cleanup.
+- Components invoke mutations and render state; no `try/catch/finally` in components, views, form handlers, or contexts. Request orchestration and error handling stay in hooks/utilities.
+- Keep business constants stable, mutable tenant policy in query data, and query keys scoped by tenant/filters. Map payloads in feature/shared utils.
+- Import helpers directly; keep standalone helpers outside class files. Use explicit types without suppressions and Thai JSDoc for [changed conditions](../clean-architecture-docs/references/conditions.md), including rendering expressions.
 
 ## Verify
 
-Use domain constants or generated enum types for stable business values instead of local string catalogs. Keep mutable tenant policy in query data and scope relevant cache keys by tenant. Search shared UI, field adapters, error/payload mappers, and feature hooks before adding alternatives. Measure expensive renders or large-list behavior before introducing memoization or virtualization.
-
-Run the affected workspace's type check and lint. When contracts change, regenerate the client before checking the web application. Do not claim browser behavior is verified unless the relevant route has been exercised.
-
-## Dates and time zones
-
-Show every date through the central UI formatter and its `DATE_FORMATS` presets (`{ ...DATE_FORMATS.time, timeZone }`); do not call `Intl.DateTimeFormat`, `toLocale*String`, or date-fns display formatters in features, and do not add inline option literals. Do date math with `date-fns`/`@date-fns/tz` directly, never by cutting date strings. A site's or assignment's own zone overrides the display zone. Do not claim dates are unchanged without a browser check or recorded-output tests. See [time handling](../clean-architecture-foundation/references/time-handling.md).
-
-## Conditions and JSDoc
-
-Add Thai JSDoc for every condition written or changed, including guards, rendering/branch expressions, defaults, validation, and callback predicates; follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions). Do not change behavior solely to attach a comment.
-
-## Shared helper conventions
-
-Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.
+Run affected type/lint checks; regenerate changed HTTP contracts first. Exercise relevant form, loading/error/empty, permission, and success states. Report mock/static/browser/API evidence separately. Measure before adding memoization/virtualization; do not claim browser behavior without exercising it.

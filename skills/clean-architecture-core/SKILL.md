@@ -1,59 +1,37 @@
 ---
 name: clean-architecture-core
-description: Design modular, tenant-aware Domain contracts and Application workflows with shared constants, configurable policies, repository ports, validation, and transactional invariants.
+description: Define Domain contracts and implement use cases, pure business rules, and Application Services that coordinate repository ports.
 ---
 
 # Clean Architecture Core
 
-Use for `packages/domains` and `packages/applications`. First inspect the target repository's module structure, exports, constants, security context, repository ports, and shared helpers. Adapt examples to its package scope; `@<project>` is a placeholder.
+Use for Domain and Application changes. Inspect the affected module, callers, exports, and existing helpers. Read only references needed for that work.
 
-## Design the module first
+## Responsibilities
 
-1. Identify its business capability, aggregate boundaries, tenant owner, lifecycle, and collaborators. A table is a persistence detail, not automatically a new business module.
-2. Define stable constants and the system catalog changes for every new module/table. Read [domain patterns](references/domain-patterns.md), including the mandatory constants checklist.
-3. Define schemas, entities, scoped ports, and operation-specific use-case contexts. Keep Domain independent of Application, database, HTTP, and UI.
-4. Implement use cases against injected ports. Read [application patterns](references/usecase-patterns.md) for helper reuse, authorization, transactions, and concurrency.
-5. For tenant-owned data or configurable behavior, read [tenant and policy design](references/tenant-policy-design.md). Global catalogs and tenant configuration must remain distinct.
-6. For a new module or substantial refactor, read [the source analysis](references/source-analysis.md) to distinguish observed patterns from improvements required by this skill.
+| Component | Owns |
+| --- | --- |
+| Domain | Types/schemas, constants, entities, ports, lifecycle invariants, pure business calculations |
+| Use case | Command/query entry, parsed input, trusted actor/tenant scope, workflow outcome |
+| Application Service | Cohesive multi-repository orchestration through required Domain interfaces |
+| Composition root | Construction/injection of concrete services and adapters; stays outside core |
 
-## Module structure and flexibility
+## Workflow
 
-Preserve established public imports while organizing related behavior into modules:
-`constants/<module>.ts`, `schema/<module>`, `entities/<module>`,
-`repositories/<module>`, `applications/<module>`, and
-`use-cases/<module>`. Small modules may retain one file per category.
-Split a growing module by aggregate or workflow, not by arbitrary line counts.
-Update package exports, permitted domain/entity/constants barrels, and entity-generation discovery when moving files. Expose utils/lib/helpers through concrete subpaths rather than barrels.
+1. Establish capability, aggregate/table owners, actor, lifecycle, and business decisions. Reuse agreed ERD/flows; tables alone do not define behavior.
+2. Define the smallest usable contract slice: inputs/results, errors, scoped repository/service ports, constants, and exports. Read [Domain patterns](references/domain-patterns.md).
+3. Implement pure rules in Domain and orchestration in Application. Use cases/services can use typed test doubles while concrete adapters are built. Read [Application patterns](references/usecase-patterns.md).
+4. For tenant-owned or configurable behavior, read [tenant policy](references/tenant-policy-design.md). Authorize stored resource ownership; request fields cannot override trusted scope.
+5. Update callers, wiring, exports, catalogs, and tests affected by the contracts. The [historical source analysis](references/source-analysis.md) is optional context, not current implementation proof.
 
-Keep invariants explicit and vary genuine policy through typed configuration or injected strategies. Tenant IDs, role names, and customer-specific branches must not control business behavior. Do not introduce a generic rules engine or plugin registry until an actual extension point requires one.
+## Rules
 
-## Mandatory constants for each module/table addition
+- A repository never depends on or calls another repository, nor accesses another owner's tables. Application Services compose required owner ports without ORM/SQL. Read [repository boundaries](../clean-architecture-persistence/references/repository-boundaries.md) for multi-owner, batching, pagination, audit, or transaction work.
+- Each new module/table has an owning constants/permission mapping; internal tables may inherit their aggregate's policy. Update affected feature/action/default-grant catalogs and versioned seed migrations; never grant new actions to all roles implicitly.
+- Validate command input with the existing `parseSchemaOrThrow` or `safeParseAsync` and use the parsed result. Keep typed errors, atomic revision checks, and required dependencies; no fallback adapters or duplicated dependency bags.
+- Import helpers through concrete subpaths and keep standalone helpers outside use-case/class files. Use explicit types, no suppressions, and Thai JSDoc for [every changed condition](../clean-architecture-docs/references/conditions.md).
+- Pure calculations receive time inputs. A use case samples `new Date()` once; use direct date-fns imports, no clock port/shared time wrapper/Temporal. Read [time handling](../clean-architecture-foundation/references/time-handling.md) for date changes.
 
-Create or extend the owning module's `constants/<module>.ts` and export it through `constants/index.ts`. Define its stable resource codes, lifecycle values, policy modes, and shared limits where they exist. Use constants in schemas and use cases instead of repeating strings.
+## Verify
 
-For every added table, record its business owner and permission mapping in the change: an internal child/join/history table may inherit its aggregate's permission; do not invent CRUD permissions or a feature for every table. SQL table names and ORM objects stay in persistence.
-
-When a capability adds system features/actions, synchronize `FEATURE_CODES`,
-`SYSTEM_FEATURES`, `PERMISSION_ACTIONS`, `SYSTEM_PERMISSIONS`, and explicit
-default-role grants as applicable. Database seed snapshots must be updated through
-versioned migrations; never automatically grant new actions to every role.
-
-## Repository composition
-
-Each table has an explicit repository owner; an aggregate may own internal child tables without separate owners. Repositories never depend on another repository or access its data through SQL, ORM relations, helpers, or read projections. Application Services coordinate narrow required owner ports, batch hydration, locks, writes, and audit within the workflow's UnitOfWork. Do not add redundant port bags, optional invariant dependencies, fallback adapters, or cross-owner query abstractions. Read [the ownership rules](../clean-architecture-persistence/references/repository-boundaries.md) for affected workflows.
-
-Every condition written or changed needs Thai JSDoc covering its purpose and outcomes, including guards, expressions, validation, and query predicates; follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions).
-
-## Reuse and verification
-
-Search `domains/src/lib`, `applications/src/lib`, decorators, and module-local helpers before writing a new abstraction. Share pure business calculations in Domain, application orchestration helpers in Application, and DB mechanics in persistence. Keep shared functions typed, cohesive, and explicit about scope and dependencies.
-
-Validate with the repository's type-check/lint commands. For runtime changes, select checks for tenant A/B separation, constants/catalog integrity, policy behavior, rollback, and concurrent updates as relevant. Report static checks separately from real API/database verification. Do not apply migrations merely to inspect a design.
-
-## Time
-
-Domain calculations take `now`, `asOf`, and `timeZone` as arguments and call `date-fns`/`@date-fns/tz` directly; no `lib/time` wrapper, Temporal, or clock port. A use case reads `new Date()` once per execution and passes it to calculations and repository ports (required parameters, no database-clock defaults); it also computes arithmetic such as lease expiry. Business defaults like `DEFAULT_TIME_ZONE` are constants. See [time handling](../clean-architecture-foundation/references/time-handling.md).
-
-## Shared helper conventions
-
-Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.
+Run affected type/lint checks and focused rule/workflow tests. Test relevant tenant, permission, lifecycle, and failure paths; real adapter tests are needed to claim rollback/concurrency. Keep isolated implementation and integration completion separate.
