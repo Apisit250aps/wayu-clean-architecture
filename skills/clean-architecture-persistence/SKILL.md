@@ -9,7 +9,7 @@ Use this skill when a feature needs storage or another concrete repository adapt
 
 ## Workflow
 
-1. Start from the Domain entity and repository port; do not introduce a storage-driven domain model.
+1. Start from the Domain entity and repository port; do not introduce a storage-driven domain model. Read [repository ownership, queries, and transactions](references/repository-boundaries.md) for repository changes and identify every table owner before editing.
 2. Add Drizzle tables, relations, migrations, and shared repository mechanics in `packages/database`. Read [Drizzle patterns](references/drizzle-patterns.md).
 3. Implement the domain port in `packages/infrastructures`, reusing the generic repository for standard CRUD and adding only real custom queries or adapters. Read [infrastructure patterns](references/infrastructure-patterns.md).
 4. Keep Drizzle types and connection details at the persistence boundary; return domain-compatible values and validate migrations against the target database workflow.
@@ -17,6 +17,12 @@ Use this skill when a feature needs storage or another concrete repository adapt
 ## Boundary
 
 Repository/storage adapters depend on domains and database, not application implementations or UI. An isolated composition root may import Application implementations to wire them to these adapters; never import that wiring into core or browser code.
+
+A repository accesses only its own tables and never calls another repository, directly or indirectly. Cross-owner SQL/ORM JOINs, read projections, views/functions, helpers, locks, and audit writers are not exceptions. Application Services coordinate required owner ports and preserve transaction, ordering, filtering, and pagination semantics. A generic base may operate on the caller's own table but cannot write another owner's audit table. See [the ownership rules](references/repository-boundaries.md).
+
+Prefer owner-scoped batch operations through Drizzle; parameterized SQL expressions do not permit crossing owners. Do not replace query loops with hidden helper queries or full raw SQL merely to remove `Promise.all`. Preserve source facts/history and verify actual query counts, rollback, and locks separately from performance claims.
+
+When writing or changing conditions, add Thai JSDoc for every form using [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions).
 
 ## Module integration and quality
 

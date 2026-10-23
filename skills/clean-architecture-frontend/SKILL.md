@@ -56,6 +56,10 @@ Use domain constants or generated enum types for stable business values instead 
 
 Run the affected workspace's type check and lint. When contracts change, regenerate the client before checking the web application. Do not claim browser behavior is verified unless the relevant route has been exercised.
 
+## Conditions and JSDoc
+
+Add Thai JSDoc for every condition written or changed, including guards, rendering/branch expressions, defaults, validation, and callback predicates; follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions). Do not change behavior solely to attach a comment.
+
 ## Shared helper conventions
 
 Import utils/lib/helpers from concrete files or package subpaths, never barrels. Keep standalone helpers outside Application/use-case and class files, in their owning package. See [Foundation helper conventions](../clean-architecture-foundation/SKILL.md#helper-files-and-imports) for the shared rule and exceptions.

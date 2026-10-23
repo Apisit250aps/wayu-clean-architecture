@@ -13,7 +13,7 @@ Use this skill when reviewing, auditing, or diagnosing codebases for compliance 
 
 ## 🎯 Primary Responsibilities
 
-When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find layer leaks"*, this skill scans the workspace for:
+When asked to _"Audit codebase"_, _"Check Clean Architecture rules"_, or _"Find layer leaks"_, this skill scans the workspace for:
 
 1. **Layer Import Leaks**: Inward packages importing outward packages (`domains` importing `database`/`applications`/`infrastructures`, or `applications` importing `infrastructures`/`database`).
 2. **Bypassed Use Cases**: Presentation controllers or routes importing repositories or querying databases directly instead of invoking Use Cases.
@@ -30,20 +30,22 @@ When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find 
 10. **Helper Import/File Violations**: Utils/lib/helpers imported through barrels or root re-exports; standalone helper functions in Application/use-case or class files. Class methods and necessary inline callbacks remain permitted.
 11. **Form State Ownership**: Editable inputs in form/query/mutation components bypass RHF/Controller, or query/request state is mirrored into form/local state through effects.
 12. **Duplicated or Inefficient Patterns**: Copied parsing/guards/mappers, oversized shared helper interfaces, N+1 queries, unbounded lists, and unsupported performance claims.
+13. **Repository Ownership Bypasses**: A repository calls another repository or accesses another owner's tables through JOINs, raw SQL, views/functions/triggers, mappers/helpers, read projections, locks, or audit. Trace transitive paths; constructor/import checks alone are insufficient. Read [the ownership rules](../clean-architecture-persistence/references/repository-boundaries.md).
+14. **Undocumented Conditions**: Conditions in new/changed code lack Thai JSDoc explaining the checked fact, reason, and each outcome. Include branches, guards, switch, ternary, logical/nullish/optional expressions, loop/callback predicates, schema validation, and SQL/ORM conditions; use [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions).
 
 ---
 
 ## 🔍 Layer Audit Matrix
 
-| Package / Layer | Permitted Imports | Prohibited Imports | Architectural Violations |
-| :--- | :--- | :--- | :--- |
-| **`packages/domains`** | Pure language types, `zod`, `uuid` (`uuidv7`). | `@<project>/database`, `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, ORMs, HTTP libs. | Any external dependency other than Zod/UUID; ORM schemas inside domain. |
-| **`packages/database`** | `@<project>/domains`, `drizzle-orm`, `pg`, `uuid`. | `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`. | Business logic in DB schemas; directly implementing use cases. |
-| **`packages/applications`** | `@<project>/domains` (schemas, entities, interfaces). | `@<project>/database`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, HTTP types (`Request`/`Response`). | Direct database queries; using `.parse()` instead of `safeParseAsync`; throwing untyped raw `Error`. |
-| **`packages/infrastructures`**| Domain/database and adapter dependencies; isolated composition roots may import application implementations. | UI or browser dependencies inside repositories; concrete adapters imported by core. | Duplicated CRUD mechanics; missing scoped/atomic write semantics; transaction connection not propagated. |
-| **`packages/client`** | `@typespec/*`, `@hey-api/*`, `Domain.Entity.*`. | Direct usage of `Domain.Entity.<Model>` in services (must alias in `spec/models/`). | Rewriting request DTO properties manually instead of using `OmitProperties`/`OptionalProperties`. |
-| **`packages/ui`** | React, styling/accessibility libraries, RHF Controllers, generic table/overlay behavior. | Backend packages, generated services, business-specific module hooks. | Tenant policy, permission decisions, or app data fetching inside generic UI. |
-| **`apps/web`** | UI, generated client, pure domain contracts/constants, explicit auth integration boundaries. | DB connections or backend compositions in browser modules. | Raw transport duplicated in views; form state mirrored with effects. |
+| Package / Layer                | Permitted Imports                                                                                            | Prohibited Imports                                                                                                                     | Architectural Violations                                                                                 |
+| :----------------------------- | :----------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| **`packages/domains`**         | Pure language types, `zod`, `uuid` (`uuidv7`).                                                               | `@<project>/database`, `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, ORMs, HTTP libs. | Any external dependency other than Zod/UUID; ORM schemas inside domain.                                  |
+| **`packages/database`**        | `@<project>/domains`, `drizzle-orm`, `pg`, `uuid`.                                                           | `@<project>/applications`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`.                                         | Business logic in DB schemas; directly implementing use cases.                                           |
+| **`packages/applications`**    | `@<project>/domains` (schemas, entities, interfaces).                                                        | `@<project>/database`, `@<project>/infrastructures`, `@<project>/ui`, `@<project>/client`, HTTP types (`Request`/`Response`).          | Direct database queries; using `.parse()` instead of `safeParseAsync`; throwing untyped raw `Error`.     |
+| **`packages/infrastructures`** | Domain/database and adapter dependencies; isolated composition roots may import application implementations. | UI or browser dependencies inside repositories; concrete adapters imported by core.                                                    | Duplicated CRUD mechanics; missing scoped/atomic write semantics; transaction connection not propagated. |
+| **`packages/client`**          | `@typespec/*`, `@hey-api/*`, `Domain.Entity.*`.                                                              | Direct usage of `Domain.Entity.<Model>` in services (must alias in `spec/models/`).                                                    | Rewriting request DTO properties manually instead of using `OmitProperties`/`OptionalProperties`.        |
+| **`packages/ui`**              | React, styling/accessibility libraries, RHF Controllers, generic table/overlay behavior.                     | Backend packages, generated services, business-specific module hooks.                                                                  | Tenant policy, permission decisions, or app data fetching inside generic UI.                             |
+| **`apps/web`**                 | UI, generated client, pure domain contracts/constants, explicit auth integration boundaries.                 | DB connections or backend compositions in browser modules.                                                                             | Raw transport duplicated in views; form state mirrored with effects.                                     |
 
 ---
 
@@ -52,21 +54,28 @@ When asked to *"Audit codebase"*, *"Check Clean Architecture rules"*, or *"Find 
 When running an audit, follow these 4 steps:
 
 ### 1. Run Automated Lints & Boundaries
+
 ```bash
 npm run check-types   # 1. TypeScript compilation check
 npm run lint          # 2. ESLint no-restricted-imports check
 ```
 
 ### 2. Search for Zero-Tolerance Violations
+
 Search for illegal bypasses across all packages:
+
 - `rg -n '@ts-ignore|eslint-disable|: any' packages/*/src apps/*/src`
 
+Trace repository ownership beyond those searches: inventory owner tables and inspect SQL/ORM queries, transitive helpers, database views/functions/triggers, inherited base behavior, and audit writers. Cross-owner read models have no exception. Follow [the ownership checklist](references/validation-checklist.md#repository-ownership-and-query-checks); report unresolved paths instead of certifying compliance from an empty grep result.
+
 ### 3. Check Application Use Cases
+
 - Verify command input uses `await schema.safeParseAsync(context.data)` or the shared `parseSchemaOrThrow`; inspect helper behavior rather than requiring copied validation code.
 - Verify errors use `ValidationError`, `NotFoundError`, `DuplicateError`, etc.
 - Verify repositories are injected via constructor interface (`I<Module>Repository`).
 
 ### 4. Check Presentation Controllers (discover `apps/api` or the existing server entry)
+
 - Verify controllers use the established composition root to obtain Use Cases.
 - Verify no controller injects or calls a Repository directly.
 - Verify endpoints follow the **Ponytail Principle** (grouped by domain module, not over-fragmented into single-method files).
@@ -83,6 +92,7 @@ When reporting audit findings to the user, format the output as follows:
 # 🛡️ Clean Architecture Audit Report
 
 ## Summary
+
 - **Total Violations**: X
 - **Critical (Layer Leaks / Direct DB bypass)**: X
 - **Code Quality (any / @ts-ignore / synchronous parse)**: X
@@ -90,16 +100,19 @@ When reporting audit findings to the user, format the output as follows:
 ## 🚩 Detected Violations
 
 ### 1. [CRITICAL] Illegal Layer Import
+
 - **File**: `packages/applications/src/use-cases/order.usecase.ts:4`
 - **Violation**: Importing `db` from `@<project>/database/db` directly inside Use Case.
 - **Remedy**: Inject `IOrderRepository` via constructor and call repository method instead.
 
 ### 2. [WARNING] Synchronous .parse() Used
+
 - **File**: `packages/applications/src/use-cases/user.usecase.ts:18`
 - **Violation**: `createUserSchema.parse(context.data)` throws unhandled ZodError.
 - **Remedy**: Replace with `const parsed = await createUserSchema.safeParseAsync(context.data)` and throw `ValidationError`.
 
 ### 3. [QUALITY] Zero-Tolerance `any` Usage
+
 - **File**: `packages/infrastructures/src/repositories/product.repo.ts:25`
 - **Violation**: Parameter typed as `any`.
 - **Remedy**: Use explicit entity type or `unknown` with type narrowing.

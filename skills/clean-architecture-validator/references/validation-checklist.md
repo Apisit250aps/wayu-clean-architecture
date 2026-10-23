@@ -26,6 +26,30 @@ Read the current core, frontend, and persistence entrypoints for ownership rules
 - Shared pure functions receive explicit time/policy inputs where needed.
 - Errors use the existing application hierarchy without leaking database internals.
 
+## Repository ownership and query checks
+
+Apply [the ownership rules](../../clean-architecture-persistence/references/repository-boundaries.md), including cross-owner summaries, audit, and locks.
+
+- Every table/view has one explicit repository owner; aggregate-owned child/history tables have no competing owner.
+- No repository calls/constructs/injects another repository, inherits its owner-specific behavior, or uses callbacks/providers as a substitute dependency.
+- Inspect each accessed table and trace JOINs, subqueries, CTEs, ORM relations, raw SQL, views/functions/triggers, mappers, and shared/inherited helpers. No cross-owner read-model or audit exception; preserve integrity constraints when reviewing database-side behavior.
+- Application Services compose required owner ports with no ORM/SQL or broad service container. A few explicit constructor dependencies are preferred over redundant port bags or fallback adapters.
+- Owner batch operations replace per-item query loops, including `Promise.all`/Lodash wrappers. Pure mapping is distinct; necessary Domain iteration/chunks have an explained bound.
+- Page/count predicates, stable order/ID tie-breaker, total beyond the last page, native decoders, and null relations remain correct. Related-field filtering/order is resolved before pagination through owners, not just on returned items.
+- Reorders specify duplicate/missing/deleted/empty behavior; replacements and audit fail/rollback as one unit.
+- Actual adapter tests establish ambient root-object identity, transactional locks through the final write, scoped expected row sets, consistent lock order, and latest finalized/reopened heads. No missing-row lock assumption or blind replacement of `this.database`/`this.db`.
+- Retained source facts/history reproduce derived reads; snapshots do not justify reproducible caches or fabricated historical inputs.
+- Ports, callers, Service wiring, exports, mocks, tests, and docs change together. File scope and formatted content are reviewed; no claim of global migration while violations remain.
+
+## Condition JSDoc checks
+
+Use [the full condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions). Within the requested scope/diff, inventory conditions rather than searching only for `if`.
+
+- Every new/changed branch, guard, `switch/case/default`, ternary/render expression, logical/nullish/default/optional expression, loop/recursion/callback predicate, refinement/assertion, result/error discriminant, and SQL/ORM condition has adjacent Thai JSDoc.
+- Comments explain the checked source fact, reason, and true/false or selected/fallback/continuing outcomes. Compound predicates explain every part and short-circuit behavior where relevant.
+- Null/undefined/falsy behavior, time units/boundaries, tenant scope, actual errors, side effects, and guarantees agree with source and callers. No invented policy or concurrency claim.
+- A method-level overview or generic comment does not substitute for its individual conditions. Expression/JSX/SQL placement preserves syntax, evaluation order, and output; no behavior changes just to attach comments.
+
 ## Persistence and concurrency
 
 - Reuse schema/query/row-mapping helpers where semantics match.

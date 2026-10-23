@@ -1,5 +1,34 @@
 # Changelog
 
+## v3.0.0
+
+Breaking architecture guidance: enforce repository ownership through both direct and indirect data access. All eight skill names remain unchanged.
+
+- Assign explicit table owners; aggregate-owned child/history tables do not require separate repositories by default.
+- Prohibit repository-to-repository calls and cross-owner SQL/ORM queries, read projections, views/functions, helper/mapper paths, locks, and audit writes. Trace database-side behavior without weakening integrity constraints.
+- Move multi-owner reads, locks, mutations, and audit orchestration to Application Services using narrow required ports and a shared UnitOfWork; reject redundant dependency bags and fallback adapters.
+- Add scoped batch-query, duplicate/empty-input, atomic replacement, pagination/empty-total, decoder/nullability, ambient transaction identity, and ordered-lock guidance.
+- Preserve source facts and historical inputs; distinguish query counts, timings/plans, static checks, and real rollback/concurrency evidence.
+- Require Thai JSDoc for every condition written or changed: if/else, guards, switch/case/default, ternary/rendering, logical/nullish/default/optional expressions, loop/callback predicates, validation/assertions, error/result branches, and SQL/ORM predicates. Explain facts, reasons, outcomes, and actual contracts without changing logic just to comment it.
+- Route the rules through Foundation, Core, Persistence, API, Frontend, Docs, and Validator; expand ownership and condition audit checklists.
+
+### Migration
+
+Reinstall the selected skills and migrate existing cross-owner workflows explicitly. Installing the release does not refactor applications or install automated enforcement. Cross-owner read models and audit helpers are not compatibility exceptions. Preserve public response shapes, filtering before pagination, tenant guards, audit rollback, and lock ordering during migration.
+
+### Validation
+
+- All eight skills passed skill-creator validation.
+- YAML metadata, concrete local Markdown links/anchors, code fences, formatting, and Git whitespace checks passed.
+- Skill/documentation changes only; application runtime tests and interactive end-to-end skill execution were not run.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.0.0 --skill '*' --agent codex --global --yes
+```
+
 ## v2.3.0
 
 Extend `clean-architecture-docs` with Thai JSDoc guidance alongside existing feature and flow handoffs.
@@ -92,12 +121,12 @@ This release consolidates the skill collection and updates its Core and Frontend
 
 The collection now contains seven skills:
 
-| Previous skills | Replacement |
-| --- | --- |
-| setup + monorepo + format | clean-architecture-foundation |
-| domain + application | clean-architecture-core |
+| Previous skills                   | Replacement                    |
+| --------------------------------- | ------------------------------ |
+| setup + monorepo + format         | clean-architecture-foundation  |
+| domain + application              | clean-architecture-core        |
 | database-drizzle + infrastructure | clean-architecture-persistence |
-| presentation + typespec | clean-architecture-api |
+| presentation + typespec           | clean-architecture-api         |
 
 The previous names all had the `clean-architecture-` prefix. Update explicit invocations, installation selections, and local references to the replacement names. Review and remove obsolete installed copies after installing the replacements. Feature, Frontend, and Validator retain their existing names.
 

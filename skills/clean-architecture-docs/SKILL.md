@@ -1,6 +1,6 @@
 ---
 name: clean-architecture-docs
-description: Write or improve Thai JSDoc for JavaScript/TypeScript code, or create source-backed feature and flow handoff docs for Mobile or Web teams with interactive platform/language selection and API diagrams. Use for code documentation and integration handoffs rather than implementation task plans.
+description: Write or improve Thai JSDoc for JavaScript/TypeScript declarations and all forms of conditions, or create source-backed feature and flow handoff docs for Mobile or Web teams with interactive platform/language selection and API diagrams. Use for code documentation and integration handoffs rather than implementation task plans.
 ---
 
 # Clean Architecture Docs
@@ -9,7 +9,7 @@ Document code contracts or client integration behavior from actual source. Docum
 
 ## Choose the documentation task
 
-- For JSDoc/code comments, read [the Thai JSDoc guide](references/jsdoc.md). Inspect the requested declarations and their callers, then add or improve comments only within the requested scope. Default to Thai explanations with unchanged technical identifiers unless the user requests another language. Do not run the Mobile/Web intake or require handoff diagrams for JSDoc work.
+- For JSDoc/code comments, read [the Thai JSDoc guide](references/jsdoc.md), including [conditions](references/jsdoc.md#conditions). Inspect declarations, every form of condition in scope, and callers before commenting. When writing or changing code, document each condition as well as the declaration contract; a method-level overview alone does not cover its branches. Default to Thai explanations with unchanged technical identifiers unless the user requests another language. Keep the requested scope and do not run the Mobile/Web intake or require handoff diagrams for JSDoc work.
 - For feature/flow handoffs, follow the intake and handoff workflow below.
 - When both are requested, apply each workflow to its own deliverable; handoff choices do not block independent JSDoc work.
 

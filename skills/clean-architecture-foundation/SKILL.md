@@ -17,6 +17,12 @@ Use this skill when creating a workspace, adding a package, or changing shared T
 
 Keep dependencies inward: domains has no internal dependency; database and applications depend on domains; infrastructures depends on domains and database; interface packages may depend on the layers they compose. Configure the restriction where it is enforceable, and verify with the workspace's type-check and lint commands.
 
+Repository ownership is stricter than package import direction: each repository accesses only its owned tables, with no direct or indirect dependency on another owner. Application Services compose owner ports; SQL JOINs, read models, helper queries, locks, and audit do not bypass this rule. Use [the ownership reference](../clean-architecture-persistence/references/repository-boundaries.md) when designing boundaries or enforcement, including schema/view/function/helper paths and caller wiring. Import lint alone cannot prove ownership.
+
+## Conditions and JSDoc
+
+When writing or changing JavaScript/TypeScript, document every condition with Thai JSDoc, not only declarations or complex branches. Cover guards, if/else, switch, ternary, logical/nullish/optional expressions, loop/callback predicates, schema validation, and query conditions. Follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions); preserve logic and explain the checked fact, reason, and outcomes rather than restating the operator.
+
 ## Growing a modular workspace
 
 Inspect current manifests, aliases, shared configs, constants, and helper libraries before scaffolding copies. Include domain constants and module-level exports in presets for new capabilities. Preserve public import paths when splitting large modules and verify entity/client generators still discover the moved files.

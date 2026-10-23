@@ -38,6 +38,12 @@ When a capability adds system features/actions, synchronize `FEATURE_CODES`,
 default-role grants as applicable. Database seed snapshots must be updated through
 versioned migrations; never automatically grant new actions to every role.
 
+## Repository composition
+
+Each table has an explicit repository owner; an aggregate may own internal child tables without separate owners. Repositories never depend on another repository or access its data through SQL, ORM relations, helpers, or read projections. Application Services coordinate narrow required owner ports, batch hydration, locks, writes, and audit within the workflow's UnitOfWork. Do not add redundant port bags, optional invariant dependencies, fallback adapters, or cross-owner query abstractions. Read [the ownership rules](../clean-architecture-persistence/references/repository-boundaries.md) for affected workflows.
+
+Every condition written or changed needs Thai JSDoc covering its purpose and outcomes, including guards, expressions, validation, and query predicates; follow [the condition guide](../clean-architecture-docs/references/jsdoc.md#conditions).
+
 ## Reuse and verification
 
 Search `domains/src/lib`, `applications/src/lib`, decorators, and module-local helpers before writing a new abstraction. Share pure business calculations in Domain, application orchestration helpers in Application, and DB mechanics in persistence. Keep shared functions typed, cohesive, and explicit about scope and dependencies.

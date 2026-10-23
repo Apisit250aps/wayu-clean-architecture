@@ -1,6 +1,8 @@
 # Drizzle ORM Database Layer Patterns & Reference Code 🗄️
 
-This reference provides complete, copy-paste ready templates and patterns for building the Database Layer (`packages/database`) using **Drizzle ORM** (PostgreSQL/Node-Postgres) in a Clean Architecture Monorepo.
+Read [repository ownership, queries, and transactions](repository-boundaries.md) before using these illustrative templates. They do not authorize cross-owner queries or establish ambient transaction behavior in a consuming project. Add Thai JSDoc to every condition written or changed using [the condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions).
+
+These examples illustrate Drizzle schema and repository mechanics. Adapt them to the consuming project's existing typed helpers, owner boundaries, tenant predicates, and transaction resolver; they are not a ready-made persistence implementation.
 
 ---
 
@@ -31,6 +33,7 @@ export default defineConfig({
 ## 2. UUIDv7 & Timestamp Helpers
 
 ### `packages/database/src/lib/uuid.ts`
+
 ```typescript
 import { v7 as uuidv7 } from 'uuid';
 
@@ -38,6 +41,7 @@ export const generateUUID = () => uuidv7();
 ```
 
 ### `packages/database/src/lib/utils.ts`
+
 ```typescript
 import { uuid, timestamp } from 'drizzle-orm/pg-core';
 import { generateUUID } from './uuid';
@@ -82,68 +86,18 @@ export default db;
 
 ---
 
-## 4. Generic Base Repository (`packages/database/src/repository.ts`)
+## 4. Reuse the existing base repository
 
-```typescript
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseRepository } from '@<project>/domains';
-import type { Database } from './db';
-import { PgTable } from 'drizzle-orm/pg-core';
-import { eq } from 'drizzle-orm';
+Inspect the consuming project's generic repository before extending it. Reuse CRUD mechanics only for the caller's owned table, with typed columns/mappers and the actual ambient transaction resolver. A base class must not call other owner repositories or write another owner's audit table. Service orchestration handles those operations; see [the ownership rules](repository-boundaries.md).
 
-export abstract class Repository<
-  T,
-  C extends Record<string, unknown>,
-  U extends Record<string, unknown>,
-> extends BaseRepository<T, C, U> {
-  constructor(
-    protected readonly db: Database,
-    protected readonly table: PgTable<any>,
-  ) {
-    super();
-  }
-
-  async create(entity: C): Promise<T> {
-    const [result] = await this.db
-      .insert(this.table)
-      .values(entity)
-      .returning();
-    return result as T;
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.db.delete(this.table).where(eq((this.table as any).id, id));
-  }
-
-  async findAll(): Promise<T[]> {
-    const results = await this.db.select().from(this.table);
-    return results as T[];
-  }
-
-  async findById(id: string): Promise<T | null> {
-    const [result] = await this.db
-      .select()
-      .from(this.table)
-      .where(eq((this.table as any).id, id));
-    return (result as T) || null;
-  }
-
-  async update(id: string, entity: U): Promise<T> {
-    const [result] = await this.db
-      .update(this.table)
-      .set(entity)
-      .where(eq((this.table as any).id, id))
-      .returning();
-    return result as T;
-  }
-}
-```
+Do not scaffold a second generic base from a simplified example: raw connection fields, unchecked casts, and omitted tenant predicates can break the caller's transaction and read contracts. A concrete adapter still implements its narrow Domain port.
 
 ---
 
 ## 5. Drizzle Table Schemas (`packages/database/src/schema/`)
 
 ### Multi-tenant Hierarchy (`packages/database/src/schema/company.ts`)
+
 ```typescript
 import { pgTable, text, index, uuid } from 'drizzle-orm/pg-core';
 import {
@@ -203,6 +157,7 @@ export const department = pgTable(
 ```
 
 ### Product Module Tables (`packages/database/src/schema/product.ts`)
+
 ```typescript
 import { pgTable, text, index, uuid, numeric } from 'drizzle-orm/pg-core';
 import {
@@ -290,6 +245,7 @@ export const product = pgTable(
 ```
 
 ### Barrel Export (`packages/database/src/schema/index.ts`)
+
 ```typescript
 export * from './auth';
 export * from './company';

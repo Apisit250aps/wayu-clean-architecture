@@ -21,14 +21,14 @@ Example for a new inspection capability:
 ```ts
 /** Stable business vocabulary; child tables share the inspection capability. */
 export const INSPECTION_RESOURCES = {
-  PLAN: 'inspection_plan',
-  ANSWER: 'inspection_answer',
+  PLAN: "inspection_plan",
+  ANSWER: "inspection_answer",
 } as const;
 
-export const INSPECTION_STATUS_VALUES = ['DRAFT', 'ACTIVE', 'CLOSED'] as const;
+export const INSPECTION_STATUS_VALUES = ["DRAFT", "ACTIVE", "CLOSED"] as const;
 export type InspectionStatus = (typeof INSPECTION_STATUS_VALUES)[number];
 
-export const INSPECTION_LATE_POLICY_VALUES = ['ALLOW', 'DENY'] as const;
+export const INSPECTION_LATE_POLICY_VALUES = ["ALLOW", "DENY"] as const;
 export type InspectionLatePolicy =
   (typeof INSPECTION_LATE_POLICY_VALUES)[number];
 ```
@@ -43,11 +43,11 @@ Keep a reusable object shape and derive operation-specific create/update schemas
 
 Separate client-writable fields from server-owned tenant IDs, actor IDs, revisions, and audit timestamps. An entity schema is not automatically a safe create/update command. Derive allowed fields deliberately, then combine validated input with trusted scope inside the application layer. Distinguish omitted values from explicit nulls. When transforms exist, distinguish `z.input` from `z.output`.
 
-Entities in this project are data classes implementing inferred schema shapes. Keep calculations in named pure functions rather than adding persistence or transport behavior to entities. Persist source facts and indispensable history; derive reproducible counts, totals, or display statuses unless a documented snapshot requirement needs stored values.
+Entities in this project are data classes implementing inferred schema shapes. Keep calculations in named pure functions rather than adding persistence or transport behavior to entities. Persist necessary source facts, explicit decisions, integrity/concurrency keys, and indispensable history; derive reproducible counts, totals, balances, durations, percentages, and statuses. A snapshot is justified only when mutable source facts cannot reproduce the original record; it is not an exception for a reproducible calculation. Before removing derived fields, retain source inputs, units, time boundaries, and historical policy, without inventing missing history. Any measured performance exception needs an explicit separately documented decision.
 
 ## Purpose-specific ports
 
-Use narrow interfaces named for business operations. Reuse the existing base repository when its CRUD semantics fit; history or append-only resources should expose only legal operations, not inherit destructive updates/deletes by convenience.
+Use narrow interfaces named for business operations. Record one repository owner for every table; internal child/history tables may belong to the aggregate owner when they have no separate repository. Another repository cannot access that owner through injection, SQL/ORM queries, views, or helpers. Application Services compose the owners. Reuse the existing base repository only for operations on the caller's own tables; history or append-only resources should expose only legal operations, not inherit destructive updates/deletes by convenience.
 
 Tenant-owned ports need tenant scope in their lookup/list/update operations, or an explicit documented ownership check before their result is used. Example contract, to be implemented in persistence rather than assumed to exist:
 

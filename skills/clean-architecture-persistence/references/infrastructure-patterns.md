@@ -1,62 +1,10 @@
 # Infrastructure Layer Patterns & Code Templates
 
-## 1. Drizzle Generic Base Repository (`database/repository.ts`)
+Read [repository ownership, queries, and transactions](repository-boundaries.md) before using these illustrative templates. They do not authorize cross-owner queries or establish ambient transaction behavior in a consuming project. Add Thai JSDoc to every condition written or changed using [the condition guide](../../clean-architecture-docs/references/jsdoc.md#conditions).
 
-```typescript
-// packages/database/src/repository.ts
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { BaseRepository } from '@<project>/domains';
-import type { Database } from './db';
-import { PgTable } from 'drizzle-orm/pg-core';
-import { eq } from 'drizzle-orm';
+## 1. Reuse the existing generic repository
 
-export abstract class Repository<
-  T,
-  C extends Record<string, unknown>,
-  U extends Record<string, unknown>,
-> extends BaseRepository<T, C, U> {
-  constructor(
-    protected readonly db: Database,
-    protected readonly table: PgTable<any>,
-  ) {
-    super();
-  }
-
-  async create(entity: C): Promise<T> {
-    const [result] = await this.db
-      .insert(this.table)
-      .values(entity)
-      .returning();
-    return result as T;
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.db.delete(this.table).where(eq((this.table as any).id, id));
-  }
-
-  async findAll(): Promise<T[]> {
-    const results = await this.db.select().from(this.table);
-    return results as T[];
-  }
-
-  async findById(id: string): Promise<T | null> {
-    const [result] = await this.db
-      .select()
-      .from(this.table)
-      .where(eq((this.table as any).id, id));
-    return (result as T) || null;
-  }
-
-  async update(id: string, entity: U): Promise<T> {
-    const [result] = await this.db
-      .update(this.table)
-      .set(entity)
-      .where(eq((this.table as any).id, id))
-      .returning();
-    return result as T;
-  }
-}
-```
+Use the consuming project's typed owner-scoped CRUD base rather than copying another generic implementation. Inspect its connection resolver, mapping, tenant predicates, and side effects before extending it. Shared mechanics operate only on the caller's own tables; audit and cross-owner work belong to Application Services. See [the base repository guidance](drizzle-patterns.md#4-reuse-the-existing-base-repository) and [ownership/transaction rules](repository-boundaries.md).
 
 ---
 
@@ -179,6 +127,7 @@ export const product = pgTable(
 ```
 
 **Rules for Drizzle schemas:**
+
 - Always use `primaryKeyUuid7('id')` — never `serial()` or manual `text().primaryKey()`
 - Always use `createdAtTimestamp('created_at')` and `updatedAtTimestamp('updated_at')`
 - Add `index(...)` for every foreign key column
@@ -208,6 +157,7 @@ export const relations = defineRelationsPart(schema, (r) => ({
 ```
 
 The `relations` object is spread into `drizzle()` in `db.ts`:
+
 ```typescript
 const db = drizzle(url, { relations: { ...relations }, logger: true });
 ```
