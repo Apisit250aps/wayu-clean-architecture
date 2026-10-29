@@ -1,4 +1,4 @@
 interface:
   display_name: "Clean Architecture Task Planning"
-  short_description: "Plan contracts, parallel work, and integration"
-  default_prompt: "Use $clean-architecture-plan for Thai summaries and English tasks with Domain contracts first, parallel tracks, and explicit start/integration dependencies."
+  short_description: "Plan code-block contracts, permissions, and delivery"
+  default_prompt: "Use $clean-architecture-plan to write Thai summaries and English tasks with code-block Domain/permission/API contracts, a generated client before backend implementation, and parallel maps; default to sequential and ask before selecting parallel delivery."

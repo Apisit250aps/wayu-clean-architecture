@@ -1,41 +1,64 @@
-# Contract readiness and parallel delivery
+# Delivery modes, readiness and parallel maps
 
-Use for plans with multiple implementation tracks or mockups before API readiness.
+Use for both sequential and parallel plans. Ask once per plan unless its mode is already explicit: “ต้องการทำตามลำดับ (ค่าเริ่มต้น) หรือวางงานแบบขนาน?” Continue independent inspection/design while awaiting an answer. Record `sequential` unless the user chooses parallel; unanswered input is not authorization. Do not ask again after a clear choice.
 
-## Domain contracts before parallel implementation
+## Contract and SDK readiness
 
-Plan the smallest coherent contract slice first, owned by a single task. Reuse existing contracts when sufficient. Its readiness criteria are:
+A usable contract slice has type-checked public entities/schemas, scoped repository/service ports, use-case inputs/results/errors, permission rules, representative accepted/rejected transitions and export paths. Record producer task and artifact revision (commit when available, otherwise an identified workspace artifact). Open decisions block only affected consumers. Contracts do not require repository implementations, rule bodies, HTTP handlers or applied migrations. Never insert placeholder production success to make a milestone appear ready.
 
-- Public types/schemas, constants, entities/value objects, and the exports consumers need are defined and type-check.
-- Repository and service ports, use-case inputs/results, typed errors, and relevant actor/tenant context are explicit in the repository's existing contract locations.
-- Business rules and lifecycle transitions have agreed inputs, outcomes, and representative accepted/rejected examples. Record relevant transaction, concurrency, pagination, and batch-operation semantics in the ports; concrete SQL and adapters come later.
-- Exact source paths and a revision (commit when available, otherwise an identified artifact snapshot) are recorded for consumers. Open decisions affecting this slice are resolved or explicitly block those consumers.
+| Track             | Start prerequisite                                                   | What remains for real integration                                                       |
+| ----------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Persistence       | Owned ports and approved storage/permission-catalog design           | Real isolated DB constraints, locks, rollback, migrations and scoped seeds              |
+| Application       | Use-case/service ports, authorization and agreed business rules      | Concrete adapters and required collaborators sharing the actual transaction boundary    |
+| Pure Domain rules | Agreed inputs/outcomes/errors/examples                               | Application integration; one owner for each rule, no repository I/O                     |
+| API spec/client   | Domain + permission + transport contracts                            | Handlers/composition verified against real services; generation itself needs no backend |
+| Web               | Generated main-app SDK with frozen request/response/error operations | Successful flows against real authenticated HTTP, then browser verification             |
 
-Contract readiness does not require repository implementations, completed rule bodies, use cases, HTTP handlers, or migrations applied to a database. It is a task milestone, not a requirement to commit or publish. Avoid placeholder production implementations that silently return fake success.
+If an implementation imports an unfinished rule/service, use an existing injection seam with typed test doubles for isolated tests or declare its implementation a prerequisite. Do not claim independent buildability with missing imports. Do not create abstractions merely to draw more lanes.
 
-Once this milestone is ready, separate the affected tracks:
+## Required maps
 
-| Track | Required to start | Independent work and later integration |
-| --- | --- | --- |
-| Persistence/repositories | Owned Domain ports and approved storage design for the affected slice | Implement schema/migrations and owned-table adapters. A repository task waits for the schema artifacts it actually imports, not all Database work. Verify DB constraints/transactions with a real isolated database before claiming them. |
-| Use cases/Application Services | Use-case and collaborator port contracts plus agreed business behavior | Implement orchestration against injected ports and typed test doubles; do not wait for concrete repositories or external adapters. Integrate real collaborators later. |
-| Domain rules / pure Domain services | Agreed rule inputs, outputs, errors, and examples | Implement pure rules in Domain. Multi-owner/I/O orchestration belongs to the Application track above, not a duplicate task here. Define any service interface needed by parallel consumers in the contract task; assign each rule implementation once. |
-| API spec/client | Domain contracts and agreed transport decisions | Define TypeSpec DTOs and generate the main application's client independently of concrete repositories/use cases. Handlers and runtime composition must later be checked against real implementations. |
-| Web mockup | Domain contracts and agreed screen/flow behavior | Build views, forms, and interaction states with typed fixtures; do not wait for API spec, generated client, or a running backend. Schedule API integration separately. |
+A main-task map covers its cross-area dependency graph. Every child task includes a small local graph of producer → current task → consumers, with potential independent siblings when relevant. Link the authoritative map instead of duplicating a large graph everywhere. Use Mermaid fenced code and real task codes/links, never labels such as “Backend done” without named artifacts.
 
-Keep actual dependencies: if a consumer imports an unfinished rule/service, use the established injection seam and a test double for isolated checks, or declare that implementation as its prerequisite. Do not describe a branch as independently buildable when its imports are missing. Do not invent extra service abstractions just to split work.
+Illustrative capability graph (replace codes with actual tasks):
 
-## Mockup and integration boundaries
+```mermaid
+flowchart LR
+    D[CON-01 Domain and permission contracts] --> S[API-01 Spec and generated SDK]
+    D --> R[DB-01 Owner adapters]
+    D --> A[APP-01 Services and use cases]
+    S --> W[WEB-01 SDK hooks and forms]
+    S --> H[API-02 Real HTTP integration]
+    R --> H
+    A --> H
+    H --> V[WEB-02 Real browser verification]
+    W --> V
+```
 
-Domain types describe business data and behavior; HTTP DTOs remain owned by the main application's spec/generated client. Do not make Domain import generated HTTP types or treat a Domain entity as a wire response. Mockup fixtures can use safe public Domain types/type imports where package boundaries allow, or a minimal feature-local view model derived from them. Keep backend runtime modules and internal fields out of browser bundles; do not create a second API spec/client for the mockup.
+The graph describes dependencies under either mode. In default sequential mode, one valid schedule is `CON-01 → API-01 → WEB-01 → DB-01 → APP-01 → API-02 → WEB-02`. Spec/SDK lets Web work precede backend implementation; Web success still waits for HTTP. Explicit user priorities can change the valid topological order.
 
-Use existing fixture/mock facilities or component props, with fixture data and simulated states outside production request paths. State which interactions are simulated, including relevant loading, empty, error, validation, permission, and success states. UI checks do not prove server authorization or persistence.
+In user-selected parallel mode, after `CON-01`, `API-01`, `DB-01` and `APP-01` may run alongside each other if their file sets and imported contracts permit it. `WEB-01` starts only after `API-01`. `API-02` waits for its three real collaborators. Parallel delivery is not authorization for agent spawning, extra chats or background execution.
 
-Plan explicit integration tasks with their own prerequisites: real repository/service composition for Application; handlers with use cases and generated HTTP contracts; Web hooks/mappers with the main application's generated client; then relevant end-to-end flow verification against the real backend. When HTTP DTOs differ from mock view data (dates, nullability, pagination, errors), adapt at the existing feature boundary and check the mapping. Remove or isolate mock wiring so production uses real requests. Each delivery area owns its integration task and links collaborators rather than combining areas into one main task.
+Each map has a compact scheduling record:
 
-## Asynchronous task handoff
+```yaml
+execution_mode: sequential
+mode_basis: default # or the user's explicit choice
+selected_order: [CON-01, API-01, WEB-01, DB-01, APP-01, API-02, WEB-02]
+potential_parallel_after_contracts: [API-01, DB-01, APP-01] # not scheduled concurrently
+shared_file_owner:
+  domain_exports: CON-01
+  codegen_registry_and_generated_sdk: API-01
+  migration_metadata: DB-01
+integration_gate: API-02 # requires real adapters, services and generated contracts
+```
 
-- Separate **start prerequisites** (exact contracts/artifacts needed to implement and verify in isolation) from **integration prerequisites** (real collaborators needed to verify the connected behavior). Each dependency names its producer task and readiness evidence; task numbering is not an execution barrier.
-- Record owned source files/exports and parallel-safe sibling tasks. Assign shared contracts, migrations, catalogs, and composition files one writer or a sequenced handoff; overlapping files are not automatically safe to edit concurrently.
-- After a contract change, its owner records the changed shape/semantics and affected consumer tasks. Update those plans, fixtures, and required generation/checks before claiming affected work still integrates; block only consumers of the changed contract.
-- Keep isolated implementation completion distinct from integration completion. A mockup or port-based task can finish its own acceptance criteria while linked integration tasks remain open; the feature is complete only when its required integration and verification tasks are complete.
+For parallel mode, replace selected_order with concrete waves/start gates. For a leaf with no independent work, state `potential parallel: none` and show its producer/current/consumer chain; do not invent peers. Maps must be acyclic, respect every prerequisite and distinguish readiness from completion of whole main tasks. A sibling that edits the same export/codegen/seed/composition file needs a single writer or sequential handoff even in parallel mode.
+
+## Client-first development and evidence
+
+Web production hooks invoke the generated main-application client from the start. No mock fetch, shadow SDK, fake API server or fallback fixture responses merely because handlers are unfinished. Without HTTP, verify imports/types, payload mapping, forms and honest unavailable/error states; do not report successful fetching or persisted writes. A user-requested standalone mockup is a different deliverable with explicit simulated evidence, not the default schedule.
+
+Domain stays independent of HTTP-generated types. DTOs are owned by the main spec and map explicitly between Domain dates/quantities and wire shapes. Do not leak backend composition into browser bundles.
+
+Plan real integration tasks per delivery area: repository/service composition for Application, authenticated handlers with generated contracts for API, Web hooks/forms against real HTTP, then scoped end-to-end checks. Keep database/HTTP/browser evidence separate from type/contract tests. After contract changes, update producer code blocks, affected task links, generation and consumers; block only tasks that consume the changed slice.

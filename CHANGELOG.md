@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.1.1
+
+Refine planning contracts, permission design, client delivery and execution-mode guidance in the existing planning skill. All eight skill names remain unchanged.
+
+- Require concrete Markdown code blocks for entity/table models, scoped repository methods, use-case inputs/results/errors, Application Service dependencies and API contracts.
+- Design permission actions, tenant/Site/resource scopes, sensitive-field access, explicit default-grant decisions and catalog/seed ownership before implementation.
+- Plan Domain/permission/transport contracts, then TypeSpec/OpenAPI and the generated main-application client before concrete Backend implementations. Web uses that client directly without a mock-fetch layer; successful data flows still require real HTTP.
+- Default to sequential delivery. Ask before selecting parallel delivery and record the user's choice; include dependency maps, potential independent work, readiness gates and shared-file ownership in main and child tasks.
+- Separate contract, SDK, HTTP and integrated readiness; preserve owner-scoped repositories, Application Service orchestration and real database/browser verification boundaries.
+- Update planning templates, examples, discovery metadata and installation examples. Existing installed skills require an explicit update.
+
+### Validation
+
+- All eight skills passed skill-creator validation; planning metadata, local reference links, language-tagged code fences and the example dependency graph/sequential schedule were checked.
+- Changed Markdown/YAML passed Prettier and Git whitespace checks.
+- Skill/documentation changes only; application runtime tests and interactive end-to-end skill execution were not run.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --global --yes
+```
+
 ## v3.1.0
 
 Plan parallel delivery from usable Domain contracts and slim every skill entrypoint with task-specific references.

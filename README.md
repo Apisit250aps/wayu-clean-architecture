@@ -29,11 +29,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 ### Install a specific Release / Version Tag 🏷️
 
 ```bash
-# Install from a specific version/tag (e.g. v3.1.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0
+# Install from a specific version/tag (e.g. v3.1.1)
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -75,10 +75,10 @@ Install all eight skills from the release in each scope you use:
 
 ```bash
 # Global Codex skills
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill '*' --agent codex --global --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --global --yes
 
 # Project Codex skills: run from the project's root
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.0 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --yes
 ```
 
 Review local skill customizations before updating; do not delete unrelated skills or legacy entries solely as part of this release.
@@ -93,7 +93,7 @@ Web/UI display formatting uses central presets; calendar math and SQL conversion
 
 | Skill Name                           | Scope / Tag           | Description                                                                                        | Key Focus                                                                                             |
 | :----------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| **`clean-architecture-plan`**        | `🏷️ Planning`         | Plan Domain contracts first, then asynchronous implementation.                                     | Thai summaries, English tasks, parallel tracks, contract ownership, and integration gates.           |
+| **`clean-architecture-plan`**        | `🏷️ Planning`         | Plan detailed contracts and generate the client before backend implementation.                     | Code-block contracts, permissions, sequential default, optional parallel maps, and integration gates. |
 | **`clean-architecture-docs`**        | `🏷️ Documentation`    | Write Thai JSDoc or create feature and flow docs for Mobile or Web teams.                          | Source-backed declaration/condition JSDoc, interactive handoff intake, and API diagrams.              |
 | **`clean-architecture-foundation`**  | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions.                                          | Turborepo setup, package presets, Prettier, and dependency boundaries.                                |
 | **`clean-architecture-core`**        | `🏷️ Backend`          | Design modular Domain and Application workflows for configurable tenant systems.                   | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency.   |
@@ -150,7 +150,9 @@ wayu-clean-architecture/
     ├── clean-architecture-plan/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
-    │   ├── references/parallel-delivery.md
+    │   ├── references/
+    │   │   ├── contract-design.md
+    │   │   └── parallel-delivery.md
     │   └── assets/
     │       ├── main-task.README.md
     │       └── task.md
@@ -203,9 +205,13 @@ wayu-clean-architecture/
 
 Use `$clean-architecture-plan` to create `plans/<task-code>-<ชื่อ main task>/README.md` with a short Thai Trello summary and linked direct-child checklist. English AI instructions live in `tasks/`; deeper subtasks are linked only from their parent task. Web, Backend (API/client/infra/domains/application), and Database (domains/database) have separate main tasks, with explicit ownership for shared domain changes. Templates are included in the skill assets.
 
-Start from the agreed ERD and business flows, then define a usable Domain contract slice: types, ports, use-case inputs/results, errors, and business rules. Once those contracts are ready, repositories, use cases/Application Services, business-rule implementations, API spec/client work, and Web mockups can proceed in parallel according to their actual inputs. Every task distinguishes start prerequisites from integration prerequisites and records file ownership plus a contract baseline. A child contract task can unblock consumers before its main task is complete.
+Start from agreed business flows and inspect current architecture/ERD. Design concrete Domain, permission and HTTP contracts in Markdown fenced code blocks: entity/table models, scoped repository methods, use-case inputs/results/errors, Application Service dependencies and orchestration, permission actions/scopes/default-grant owners, and every API method/path/request/response. Tables explain traceability; they do not replace contract signatures. See [contract design](skills/clean-architecture-plan/references/contract-design.md).
 
-Web mockups use Domain-informed typed fixtures or view models without waiting for HTTP contracts. Real API integration still uses the main application's spec-generated client types. Separate integration tasks connect real collaborators and verify behavior; a completed mockup or isolated use-case test does not mean the integrated feature is complete.
+**Sequential is the default.** Ask the user whether they want parallel delivery before selecting it, unless they already specified the mode. Every main and child task has a parallel map showing actual dependencies, potential independent work, readiness gates and shared-file ownership. In sequential mode those opportunities remain informational and a concrete ordered schedule is recorded. Choosing a delivery mode does not authorize agent spawning or task execution. See [delivery modes and maps](skills/clean-architecture-plan/references/parallel-delivery.md).
+
+Plan **Domain + permission + transport contracts → TypeSpec/OpenAPI → generated main-app client → Web using that client**, without waiting for Backend repository/use-case/handler implementations to generate the SDK. Web hooks/forms use the actual generated client immediately, with no mock-fetch layer or fake-success handlers. Without a running API, static/payload checks and honest unavailable states are possible; successful data flows still require real HTTP. Standalone mockups remain an explicit separate deliverable when requested.
+
+Each task distinguishes exact start prerequisites from integration prerequisites, records its contract producer/artifact revision and permissions, and links real-collaborator integration tasks. Contract-ready, SDK-ready, HTTP-ready and database/browser-integrated are different milestones. After contracts are ready, implementations may be technically independent, but run concurrently only if the user selected parallel delivery.
 
 Across implementation skills, utils/lib/helpers use concrete-file imports and standalone helpers live outside use-case/class files. Web editable form/input state uses RHF/Controller; React Query owns server state.
 
