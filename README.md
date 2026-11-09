@@ -29,11 +29,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 ### Install a specific Release / Version Tag 🏷️
 
 ```bash
-# Install from a specific version/tag (e.g. v3.2.0)
-npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0
+# Install from a specific version/tag (e.g. v3.2.1)
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.1
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.1 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -75,10 +75,10 @@ Install all eight skills from the release in each scope you use:
 
 ```bash
 # Global Codex skills
-npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill '*' --agent codex --global --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.1 --skill '*' --agent codex --global --yes
 
 # Project Codex skills: run from the project's root
-npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.1 --skill '*' --agent codex --yes
 ```
 
 Review local skill customizations before updating; do not delete unrelated skills or legacy entries solely as part of this release.

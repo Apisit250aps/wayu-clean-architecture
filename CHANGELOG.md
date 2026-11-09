@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.2.1
+
+Make the HMS tldraw workflow output contract explicit.
+
+- Require separate legacy `.tldr` files for Flow, Business, and Endpoint, plus the module README.
+- Specify block styles, swimlane placement, and numbered paths with an example across all three views.
+- Add a structural checker for the file set, canvas records, bindings, and cross-view pointers.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.1 --skill '*' --agent codex --global --yes
+```
+
 ## v3.2.0
 
 Add an optional tldraw workflow documentation mode to `clean-architecture-docs`.
