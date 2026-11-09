@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.2.0
+
+Add an optional tldraw workflow documentation mode to `clean-architecture-docs`.
+
+- Create a complete module set or update selected views of an existing workflow. Link Flow, Business, and Endpoint canvases to the module README and source revision.
+- Define conventions for swimlanes, decisions, request and response boxes, connectors, stable IDs, and source maps.
+- Check route coverage, branch outcomes, references, and canvas layout separately. Keep Thai JSDoc and Mobile/Web handoffs available as separate modes.
+
+### Install
+
+```sh
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill '*' --agent codex --global --yes
+```
+
 ## v3.1.1
 
 Refine planning contracts, permission design, client delivery and execution-mode guidance in the existing planning skill. All eight skill names remain unchanged.

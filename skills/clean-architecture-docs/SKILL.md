@@ -1,17 +1,18 @@
 ---
 name: clean-architecture-docs
-description: Write source-backed Thai JSDoc for declarations and conditions, or Mobile/Web feature and API flow handoffs. Not for implementation task plans.
+description: Write source-backed Thai JSDoc for declarations and conditions, Mobile/Web feature and API flow handoffs, or optional tldraw workflow docs. Not for implementation task plans.
 ---
 
 # Clean Architecture Docs
 
 Document actual source and callers within the requested scope. Documentation work does not authorize behavior changes. Load only the requested mode.
 
-| Request | Read and do |
-| --- | --- |
-| JSDoc/code comments | Read relevant declaration/tag sections of [the JSDoc guide](references/jsdoc.md) and [conditions](references/conditions.md) when conditions are in scope. Inspect callers; use Thai prose and unchanged identifiers unless requested otherwise. No Mobile/Web intake or diagrams. |
-| Feature/flow handoff | [Handoff workflow](references/handoff-workflow.md), then adapt [the template](assets/handoff.md). Ask only missing platform/language/flow choices and wait before drafting dependent documents. |
-| Both | Apply each mode to its own deliverable; handoff questions do not block independent JSDoc work. |
+| Request              | Read and do                                                                                                                                                                                                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| JSDoc/code comments  | Read relevant declaration/tag sections of [the JSDoc guide](references/jsdoc.md) and [conditions](references/conditions.md) when conditions are in scope. Inspect callers; use Thai prose and unchanged identifiers unless requested otherwise. No Mobile/Web intake or diagrams. |
+| Feature/flow handoff | [Handoff workflow](references/handoff-workflow.md), then adapt [the template](assets/handoff.md). Ask only missing platform/language/flow choices and wait before drafting dependent documents.                                                                                   |
+| tldraw workflow docs | Use when requested or when extending an existing tldraw workflow set. Read [the tldraw workflow pattern](references/tldraw-workflow.md). Follow the selected scope and the repository’s canvas format.                                                                            |
+| Multiple modes       | Apply each mode to its own deliverable. Handoff intake applies only to Mobile/Web handoffs.                                                                                                                                                                                       |
 
 ## Evidence and delivery
 

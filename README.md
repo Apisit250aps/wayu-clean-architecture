@@ -29,11 +29,11 @@ npx skills add Apisit250aps/wayu-clean-architecture --skill clean-architecture-f
 ### Install a specific Release / Version Tag 🏷️
 
 ```bash
-# Install from a specific version/tag (e.g. v3.1.1)
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1
+# Install from a specific version/tag (e.g. v3.2.0)
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0
 
 # Install a specific skill from a release version
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill clean-architecture-core
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill clean-architecture-core
 ```
 
 ### Install globally (available in all projects)
@@ -75,10 +75,10 @@ Install all eight skills from the release in each scope you use:
 
 ```bash
 # Global Codex skills
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --global --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill '*' --agent codex --global --yes
 
 # Project Codex skills: run from the project's root
-npx skills add Apisit250aps/wayu-clean-architecture#v3.1.1 --skill '*' --agent codex --yes
+npx skills add Apisit250aps/wayu-clean-architecture#v3.2.0 --skill '*' --agent codex --yes
 ```
 
 Review local skill customizations before updating; do not delete unrelated skills or legacy entries solely as part of this release.
@@ -94,7 +94,7 @@ Web/UI display formatting uses central presets; calendar math and SQL conversion
 | Skill Name                           | Scope / Tag           | Description                                                                                        | Key Focus                                                                                             |
 | :----------------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
 | **`clean-architecture-plan`**        | `🏷️ Planning`         | Plan detailed contracts and generate the client before backend implementation.                     | Code-block contracts, permissions, sequential default, optional parallel maps, and integration gates. |
-| **`clean-architecture-docs`**        | `🏷️ Documentation`    | Write Thai JSDoc or create feature and flow docs for Mobile or Web teams.                          | Source-backed declaration/condition JSDoc, interactive handoff intake, and API diagrams.              |
+| **`clean-architecture-docs`**        | `🏷️ Documentation`    | Write Thai JSDoc, Mobile/Web handoffs, or optional tldraw workflow docs.                           | Source-backed comments, API handoffs, and linked Flow, Business, and Endpoint canvases.               |
 | **`clean-architecture-foundation`**  | `🏷️ Both (Fullstack)` | Set up a workspace or package and its shared conventions.                                          | Turborepo setup, package presets, Prettier, and dependency boundaries.                                |
 | **`clean-architecture-core`**        | `🏷️ Backend`          | Design modular Domain and Application workflows for configurable tenant systems.                   | Module constants/catalogs, scoped ports, shared validation/policies, unit of work, and concurrency.   |
 | **`clean-architecture-persistence`** | `🏷️ Backend`          | Implement concrete storage and repository adapters.                                                | Owner-scoped Drizzle repositories, batch queries, pagination, transactions/locks, and infrastructure. |
@@ -146,7 +146,8 @@ wayu-clean-architecture/
     │   └── references/
     │       ├── jsdoc.md
     │       ├── conditions.md
-    │       └── handoff-workflow.md
+    │       ├── handoff-workflow.md
+    │       └── tldraw-workflow.md
     ├── clean-architecture-plan/
     │   ├── SKILL.md
     │   ├── agents/openai.yaml
@@ -225,11 +226,15 @@ The skills share some relative references. Install the collection together when 
 
 Use `$clean-architecture-docs` for feature handoff documentation. It asks interactively for Mobile, Web, or both; document language; and feature/flow scope before drafting. Diagrams use English; headings and explanatory prose use the selected language. Each flow separates its flowchart, step/decision explanation, sequence diagram, and API ordering explanation into readable sections. API examples show request bodies, HTTP statuses, responses, and next client actions for each source-supported integration case. Existing docs conventions take precedence; fallback paths are `docs/features/` and `docs/flow/mobile/` or `docs/flow/web/`.
 
+For tldraw workflow documentation, choose the full module set or a scoped update to existing canvases. The [tldraw workflow pattern](skills/clean-architecture-docs/references/tldraw-workflow.md) links the overview, business decisions, and endpoints to source evidence.
+
 For code documentation, the same skill uses [the Thai JSDoc guide](skills/clean-architecture-docs/references/jsdoc.md) to explain responsibilities, inputs, outputs, business rules, and errors from actual source. Its [condition rules](skills/clean-architecture-docs/references/conditions.md) cover every condition written or changed, not only method declarations or `if` statements. JSDoc requests do not require platform selection or handoff diagrams.
 
 Example: `ใช้ $clean-architecture-docs เพิ่ม JSDoc ภาษาไทยให้ UseCase และ Repository ของ feature ผู้ใช้ โดยอธิบายเงื่อนไข ผลลัพธ์ และข้อผิดพลาดตามโค้ดจริง`
 
 Example: `ใช้ $clean-architecture-docs สร้างเอกสารส่งต่อ feature การลา แล้วถาม platform และภาษาก่อน`
+
+Example: `ใช้ $clean-architecture-docs ทำเอกสาร workflow แบบ tldraw ครบชุดสำหรับโมดูล task`
 
 1. **Progressive Loading**: AI agents initially read only the frontmatter `name` and `description`.
 2. **Context Activation**: When you ask your agent to _"Create a new Use Case for user registration"_ or _"Review my repository for layer leaks"_, the agent automatically loads the corresponding `SKILL.md` and referenced guidelines.
